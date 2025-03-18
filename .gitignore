@@ -1,0 +1,40 @@
+# Byte-compiled / Cached files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+.env/
+
+# Django / SQLite
+db.sqlite3
+*.sqlite3
+
+# Logs and Debugging
+*.log
+logs/
+
+# IDE/Editor Files
+.vscode/
+*.swp
+*.swo
+.idea/
+
+# Environment Variables and Secrets
+.env
+*.env
+secrets.json
+
+# OS-Specific Files
+.DS_Store
+Thumbs.db
+
+# pytest Cache
+.pytest_cache/
+
+# Migrations (optional, if you don’t want them tracked)
+*/migrations/*.pyc
+*/migrations/*.pyo
+*/migrations/__pycache__/
