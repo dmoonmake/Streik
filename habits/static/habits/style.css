@@ -88,3 +88,41 @@ footer {
   color: #777;
   font-size: 14px;
 }
+
+/* === Table Styles === */
+table {
+  width: 100%;
+  max-width: 800px;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+thead {
+  background: #134B70; /* Deep Blue */
+  color: white;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+tbody tr:hover {
+  background: #f9f9f9;
+}
+
+/* === Button Styles Inside Table === */
+td button {
+  font-size: 14px;
+  padding: 5px 10px;
+  margin-right: 5px;
+}
+
+td form {
+  display: inline;
+}

@@ -2,11 +2,14 @@
 
 {% block content %}
 <h2>{{ habit.habit_name }}</h2>
+<h4>🏆: {{ habit.habit_best_streak }} | 🔥: {{ habit.get_current_streak }}</h4>
 <p><strong>Occurrence:</strong> {{ habit.habit_occurrence }}</p>
 <p><strong>Description:</strong> {{ habit.habit_description }}</p>
+<!-- <p><strong>Current Streak 🔥:</strong> {{ habit.get_current_streak }}</p> -->
+
 <!-- Edit & Delete Buttons -->
-<a href="{% url 'edit_habit' habit.habit_id %}"><button>Edit Habit</button></a>
-<a href="{% url 'delete_habit' habit.habit_id %}"><button style="background-color: red;">Delete Habit</button></a>
+<!-- <a href="{% url 'edit_habit' habit.habit_id %}"><button>Edit Habit</button></a>
+<a href="{% url 'delete_habit' habit.habit_id %}"><button style="background-color: red;">Delete Habit</button></a> -->
 
 <!-- Mark Habit as Completed -->
 <form action="{% url 'mark_completed' habit.habit_id %}" method="POST">

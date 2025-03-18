@@ -2,7 +2,69 @@
 
 {% block content %}
 <h2>All Habits</h2>
-<ul>
+<a href="{% url 'create_habit' %}">➕ Add New Habit</a>
+
+<!-- Sorting & Filtering Form -->
+<form method="GET">
+    <label for="filter">Filter by Occurrence:</label>
+    <select name="filter_by" id="filter">
+        <option value="all" {% if filter_by == "all" %}selected{% endif %}>All</option>
+        <option value="daily" {% if filter_by == "daily" %}selected{% endif %}>Daily</option>
+        <option value="weekly" {% if filter_by == "weekly" %}selected{% endif %}>Weekly</option>
+        <option value="monthly" {% if filter_by == "monthly" %}selected{% endif %}>Monthly</option>
+    </select>
+
+    <label for="sort">Sort by:</label>
+    <select name="sort_by" id="sort">
+        <option value="habit_name" {% if sort_by == "habit_name" %}selected{% endif %}>Name</option>
+        <option value="streak" {% if sort_by == "streak" %}selected{% endif %}>Streak</option>
+        <option value="habit_occurrence" {% if sort_by == "habit_occurrence" %}selected{% endif %}>Occurrence</option>
+    </select>
+
+    <button type="submit">Apply</button>
+</form>
+
+<!-- Habit Table -->
+<table>
+    <thead>
+        <tr>
+            <th>Habit Name</th>
+            <th>Occurrence</th>
+            <th>Streak 🔥</th>
+            <th>Best Streak 🏆</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for habit in habits %}
+        <tr>
+            <td><a href="{% url 'habit_detail' habit.habit_id %}">{{ habit.habit_name }}</a></td>
+            <td>{{ habit.habit_occurrence }}</td>
+            <td>{{ habit.get_current_streak }}</td>
+            <td>{{ habit.habit_best_streak }}</td>
+            <td>
+                <!-- Complete Button -->
+                <form action="{% url 'mark_completed' habit.habit_id %}" method="POST" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit">✅</button>
+                </form>
+                
+                <!-- Edit Button -->
+                <a href="{% url 'edit_habit' habit.habit_id %}"><button>✏️</button></a>
+
+                <!-- Delete Button -->
+                <a href="{% url 'delete_habit' habit.habit_id %}"><button style="background-color: red;">🗑️</button></a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3">No habits found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- <ul>
     {% for habit in habits %}
         <li>
             <a href="{% url 'habit_detail' habit.habit_id %}">{{ habit.habit_name }}</a>
@@ -11,6 +73,6 @@
     {% empty %}
         <p>No habits found.</p>
     {% endfor %}
-</ul>
-<a href="{% url 'create_habit' %}">➕ Add New Habit</a>
+</ul> -->
+
 {% endblock %}

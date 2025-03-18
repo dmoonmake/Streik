@@ -22,9 +22,39 @@ class Habit(models.Model):
         default="daily"  # Default to daily occurrence
     )
     habit_created_on = models.DateTimeField(auto_now_add=True)  # Auto set when habit is created
+    habit_best_streak = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.habit_name} ({self.habit_occurrence})"
+    
+    def get_current_streak(self):
+        """
+        Calculates the current streak of consecutive habit completions.
+        """
+        completions = self.completions.order_by("-completion_date")
+
+        if not completions.exists():
+            return 0  # No completions, streak is 0
+
+        streak = 0
+        today = date.today()
+
+        for i, completion in enumerate(completions):
+            if i == 0 and completion.completion_date == today:
+                streak += 1
+            elif i > 0:
+                expected_date = completions[i - 1].completion_date - timedelta(days=1)
+                if completion.completion_date == expected_date:
+                    streak += 1
+                else:
+                    break  # Streak ends if there is a gap
+
+        # Update best streak if the current streak is higher
+        if streak > self.habit_best_streak:
+            self.habit_best_streak = streak
+            self.save()
+
+        return streak
 
 
 class Completion(models.Model):

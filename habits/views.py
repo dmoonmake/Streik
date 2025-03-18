@@ -75,3 +75,29 @@ def delete_habit(request, habit_id):
         return redirect("habit_list")
 
     return render(request, "habits/delete_habit.html", {"habit": habit})
+
+def habit_list(request):
+    """
+    Display a list of all habits with sorting and filtering options.
+    """
+    sort_by = request.GET.get("sort_by", "habit_name")  # Default: sort by name
+    filter_by = request.GET.get("filter_by", "all")  # Default: show all
+
+    habits = Habit.objects.all()
+
+    # Apply filtering based on occurrence
+    if filter_by in ["daily", "weekly", "monthly"]:
+        habits = habits.filter(habit_occurrence=filter_by)
+
+    # Apply sorting
+    if sort_by == "streak":
+        habits = sorted(habits, key=lambda h: h.get_current_streak(), reverse=True)
+    else:
+        habits = habits.order_by(sort_by)
+
+    return render(request, "habits/habit_list.html", {
+        "habits": habits,
+        "sort_by": sort_by,
+        "filter_by": filter_by
+    })
+
