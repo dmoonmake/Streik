@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{{ habit.habit_name }}</h2>
+<p><strong>Occurrence:</strong> {{ habit.habit_occurrence }}</p>
+<p><strong>Description:</strong> {{ habit.habit_description }}</p>
+<!-- Edit & Delete Buttons -->
+<a href="{% url 'edit_habit' habit.habit_id %}"><button>Edit Habit</button></a>
+<a href="{% url 'delete_habit' habit.habit_id %}"><button style="background-color: red;">Delete Habit</button></a>
+
+<!-- Mark Habit as Completed -->
+<form action="{% url 'mark_completed' habit.habit_id %}" method="POST">
+    {% csrf_token %}
+    <button type="submit">Mark as Completed for Today</button>
+</form>
+
+<h3>Completion History</h3>
+<ul>
+    {% for completion in completions %}
+        <li>{{ completion.completion_date }}</li>
+    {% empty %}
+        <p>No completions recorded.</p>
+    {% endfor %}
+</ul>
+
+<a href="{% url 'habit_list' %}">Back to Habit List</a>
+{% endblock %}
