@@ -10,4 +10,4 @@ test:
     - python manage.py migrate
     - python manage.py collectstatic --noinput --clear
   script:
-    - pytest --disable-warnings --bdd-annotations
+    - pytest --disable-warnings
