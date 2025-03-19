@@ -1,0 +1,41 @@
+name: Run BDD Tests
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11.9'
+
+      - name: Install Dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Run Migrations (SQLite)
+        run: |
+          source venv/bin/activate
+          python manage.py migrate
+          python manage.py collectstatic --noinput
+
+      - name: Run BDD Tests
+        run: |
+          source venv/bin/activate
+          pytest --disable-warnings --bdd-annotations
