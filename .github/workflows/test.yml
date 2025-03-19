@@ -29,11 +29,11 @@ jobs:
           source venv/bin/activate
           pip install -r requirements.txt
 
-      - name: Run Migrations (SQLite)
+      - name: Run Migrations & Collect Static 
         run: |
           source venv/bin/activate
           python manage.py migrate
-          python manage.py collectstatic --noinput
+          python manage.py collectstatic --noinput --clear
 
       - name: Run BDD Tests
         run: |
