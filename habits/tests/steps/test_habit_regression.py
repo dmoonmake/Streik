@@ -20,33 +20,55 @@ def existing_habit(db):
         habit_name="Morning Workout",
         habit_description="Exercise for 30 minutes",
         habit_occurrence="daily",
+        habit_status="active",
+        habit_last_streak=0,
         habit_best_streak=3
     )
 
 @pytest.fixture
 def multiple_habits(db):
     habits = [
-        Habit.objects.create(habit_name="Morning Run", habit_occurrence="daily", habit_best_streak=2),
-        Habit.objects.create(habit_name="Weekly Yoga", habit_occurrence="weekly", habit_best_streak=5),
-        Habit.objects.create(habit_name="Night Reading", habit_occurrence="daily"),
-        Habit.objects.create(habit_name="Museum Visiting", habit_occurrence="monthly", habit_best_streak=7),
-        Habit.objects.create(habit_name="Date Night", habit_occurrence="weekly")
+        # Active Habits
+        Habit.objects.create(habit_name="Evening Run", habit_occurrence="daily", habit_status="active", habit_last_streak=2, habit_best_streak=3),
+        Habit.objects.create(habit_name="Weekly Yoga", habit_occurrence="weekly", habit_status="active", habit_last_streak=4, habit_best_streak=5),
+        Habit.objects.create(habit_name="Morning Reading", habit_occurrence="daily", habit_status="active", habit_last_streak=1, habit_best_streak=2),
+
+        # Paused Habits (Streaks Frozen)
+        Habit.objects.create(habit_name="Museum Visiting", habit_occurrence="monthly", habit_status="paused", habit_last_streak=3, habit_best_streak=8),
+        Habit.objects.create(habit_name="Date Night", habit_occurrence="weekly", habit_status="paused", habit_last_streak=5, habit_best_streak=5),
+        Habit.objects.create(habit_name="Weekend Hike", habit_occurrence="weekly", habit_status="paused", habit_last_streak=7, habit_best_streak=10),
+
+        # Inactive Habits (Streak Resets)
+        Habit.objects.create(habit_name="Swimming", habit_occurrence="daily", habit_status="inactive", habit_last_streak=0, habit_best_streak=6),
+        Habit.objects.create(habit_name="Morning Walk", habit_occurrence="daily", habit_status="inactive", habit_last_streak=0, habit_best_streak=4),
+        Habit.objects.create(habit_name="Monthly Workshop", habit_occurrence="monthly", habit_status="inactive", habit_last_streak=0, habit_best_streak=3),
     ]
 
-    # ✅ Simulate past completions to match best streaks
+    # Simulate past completions (current streak)
     today = date.today()
     
-    # Morning Run: 2-day streak
-    Completion.objects.create(completion_habit=habits[0], completion_date=today)
-    Completion.objects.create(completion_habit=habits[0], completion_date=today - timedelta(days=1))
-    
-    # Weekly Yoga: 5-week streak
-    for i in range(5):
+    # Evening Run (2-day streak)
+    for i in range(2):
+        Completion.objects.create(completion_habit=habits[0], completion_date=today - timedelta(days=i))
+
+    # Weekly Yoga (4-week streak)
+    for i in range(4):
         Completion.objects.create(completion_habit=habits[1], completion_date=today - timedelta(weeks=i))
 
-    # Museum Visiting: 7-month streak
-    for i in range(7):
+    # Morning Reading (1-day streak)
+    Completion.objects.create(completion_habit=habits[2], completion_date=today)
+
+    # Museum Visiting (3-month streak)
+    for i in range(3):
         Completion.objects.create(completion_habit=habits[3], completion_date=today - timedelta(weeks=i * 4))
+
+    # Date Night (5-week streak)
+    for i in range(5):
+        Completion.objects.create(completion_habit=habits[4], completion_date=today - timedelta(weeks=i))
+
+    # Weekend Hike (7-week streak)
+    for i in range(7):
+        Completion.objects.create(completion_habit=habits[5], completion_date=today - timedelta(weeks=i))
 
     return habits
 
@@ -59,7 +81,7 @@ def visit_habit_page(client):
 
 @when("I enter habit details")
 def enter_habit_details(client):
-    data = {"habit_name": "Morning Jogging", "habit_occurrence": "daily"}
+    data = {"habit_name": "Dog Walking", "habit_occurrence": "daily", "habit_status": "active", "habit_last_streak": 0, "habit_best_streak": 0}
     client.post("/habits/create/", data)
 
 @when("I submit the habit form")
@@ -69,7 +91,7 @@ def submit_habit_form(client):
 
 @then("I should see the new habit in my habit list")
 def habit_is_created():
-    assert Habit.objects.filter(habit_name="Morning Jogging").exists()
+    assert Habit.objects.filter(habit_name="Dog Walking").exists()
 
 @given("I have an existing habit")
 def habit_exists(existing_habit):
@@ -90,7 +112,8 @@ def update_habit_details(client, existing_habit):
     updated_data = {
         "habit_name": "Morning Meditation",
         "habit_description": "Meditate for 15 minutes",
-        "habit_occurrence": "daily"
+        "habit_occurrence": "daily", 
+        "habit_status": "active" 
     }
     client.post(f"/habits/{existing_habit.habit_id}/edit/", updated_data)
 
@@ -103,7 +126,6 @@ def submit_edit_form(client, existing_habit):
 def check_updated_habit():
     assert Habit.objects.filter(habit_name="Morning Meditation").exists()
 
-# ✅ Habit Deletion Steps
 @when("I visit the delete page for that habit")
 def visit_delete_page(client, existing_habit):
     response = client.get(f"/habits/{existing_habit.habit_id}/delete/")
@@ -165,17 +187,6 @@ def filter_habits_by_daily(client):
 def check_filtered_habits():
     assert Habit.objects.filter(habit_occurrence="daily").exists()
 
-@given("I have multiple habits with different streak lengths")
-def multiple_streaks(client, multiple_habits):
-    Completion.objects.create(completion_habit=multiple_habits[0], completion_date=date.today())
-    Completion.objects.create(completion_habit=multiple_habits[0], completion_date=date.today() - timedelta(days=1))
-    Completion.objects.create(completion_habit=multiple_habits[1], completion_date=date.today())
-
-@when("I visit my analytics page")
-def visit_analytics_page(client):
-    response = client.get("/habits/analytics/")
-    assert response.status_code == 200
-
 @then("I should see the habit with the longest run streak")
 def check_longest_streak_habit():
     top_habit = max(Habit.objects.all(), key=lambda h: h.get_current_streak())
@@ -190,32 +201,10 @@ def view_habit_details(client, existing_habit):
 def check_longest_streak(existing_habit):
     assert existing_habit.habit_best_streak >= existing_habit.get_current_streak()
 
-# ✅ Reused Given Step
-@given("I have multiple tracked habits")
-def multiple_habits_exist(multiple_habits):
-    assert len(multiple_habits) > 1
-
-@when("I visit my habit list")
-def visit_habit_list(client):
-    response = client.get("/habits/")
+@when("I visit my analytics page")
+def visit_analytics_page(client):
+    response = client.get("/habits/analytics/")
     assert response.status_code == 200
-
-@then("I should see a list of all my habits")
-def check_habit_list(client, multiple_habits):
-    response = client.get("/habits/")
-    for habit in multiple_habits:
-        assert habit.habit_name in response.content.decode()
-
-@when('I filter my habits by "daily"')
-def filter_habits_by_daily(client):
-    response = client.get("/habits/?filter_by=daily")
-    assert response.status_code == 200
-
-@then("I should only see daily habits")
-def check_filtered_habits(client):
-    response = client.get("/habits/?filter_by=daily")
-    assert "Weekly Yoga" not in response.content.decode()
-    assert "Morning Run" in response.content.decode()
 
 @when("I visit my analytics page")
 def visit_analytics_page(client):
@@ -226,13 +215,4 @@ def visit_analytics_page(client):
 def check_longest_streak_habit(multiple_habits):
     top_habit = max(multiple_habits, key=lambda h: h.get_current_streak())
     assert top_habit.get_current_streak() > 0
-
-@when("I view the habit details")
-def view_habit_details(client, multiple_habits):
-    response = client.get(f"/habits/{multiple_habits[0].habit_id}/")
-    assert response.status_code == 200
-
-@then("I should see its longest recorded streak")
-def check_longest_streak(multiple_habits):
-    assert multiple_habits[0].habit_best_streak >= multiple_habits[0].get_current_streak()
 

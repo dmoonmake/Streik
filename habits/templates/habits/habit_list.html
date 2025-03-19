@@ -1,17 +1,26 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>All Habits</h2>
+<h2>Habits</h2>
 <a href="{% url 'create_habit' %}">➕ Add New Habit</a>
 
 <!-- Sorting & Filtering Form -->
 <form method="GET">
-    <label for="filter">Filter by Occurrence:</label>
-    <select name="filter_by" id="filter">
+    <label for="filter_occurrence">Filter by Occurrence:</label>
+    <select name="filter_by_occurrence" id="filter_occurrence">
         <option value="all" {% if filter_by == "all" %}selected{% endif %}>All</option>
         <option value="daily" {% if filter_by == "daily" %}selected{% endif %}>Daily</option>
         <option value="weekly" {% if filter_by == "weekly" %}selected{% endif %}>Weekly</option>
         <option value="monthly" {% if filter_by == "monthly" %}selected{% endif %}>Monthly</option>
+    </select>
+
+    <!-- Filter by Status -->
+    <label for="filter_status">Filter by Status:</label>
+    <select name="filter_by_status" id="filter_status">
+        <option value="all" {% if filter_by_status == "all" %}selected{% endif %}>All</option>
+        <option value="active" {% if filter_by_status == "active" %}selected{% endif %}>Active</option>
+        <option value="paused" {% if filter_by_status == "paused" %}selected{% endif %}>Paused</option>
+        <option value="inactive" {% if filter_by_status == "inactive" %}selected{% endif %}>Inactive</option>
     </select>
 
     <label for="sort">Sort by:</label>
@@ -30,6 +39,7 @@
         <tr>
             <th>Habit Name</th>
             <th>Occurrence</th>
+            <th>Status</th>
             <th>Streak 🔥</th>
             <th>Best Streak 🏆</th>
             <th>Actions</th>
@@ -40,15 +50,21 @@
         <tr>
             <td><a href="{% url 'habit_detail' habit.habit_id %}">{{ habit.habit_name }}</a></td>
             <td>{{ habit.habit_occurrence }}</td>
+            <td>{{ habit.habit_status }}</td>
             <td>{{ habit.get_current_streak }}</td>
             <td>{{ habit.habit_best_streak }}</td>
             <td>
-                <!-- Complete Button -->
+                <!-- Complete Button (Disabled for Paused & Inactive Habits) -->
                 <form action="{% url 'mark_completed' habit.habit_id %}" method="POST" style="display:inline;">
                     {% csrf_token %}
-                    <button type="submit">✅</button>
+                    <button type="submit"
+                        {% if habit.habit_status == "paused" or habit.habit_status == "inactive" %} 
+                            disabled style="background-color: grey; cursor: not-allowed;" 
+                        {% endif %}>
+                        ✅
+                    </button>
                 </form>
-                
+
                 <!-- Edit Button -->
                 <a href="{% url 'edit_habit' habit.habit_id %}"><button>✏️</button></a>
 

@@ -2,7 +2,7 @@
 
 {% block content %}
 <h2>{{ habit.habit_name }}</h2>
-<h4>🏆: {{ habit.habit_best_streak }} | 🔥: {{ habit.get_current_streak }}</h4>
+<h4>🏆: {{ habit.habit_best_streak }} | 🔥: {{ habit.get_current_streak }} | {{ habit.habit_status }}</h4>
 <p><strong>Occurrence:</strong> {{ habit.habit_occurrence }}</p>
 <p><strong>Description:</strong> {{ habit.habit_description }}</p>
 <!-- <p><strong>Current Streak 🔥:</strong> {{ habit.get_current_streak }}</p> -->

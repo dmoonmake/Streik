@@ -23,14 +23,36 @@ class Habit(models.Model):
     )
     habit_created_on = models.DateTimeField(auto_now_add=True)  # Auto set when habit is created
     habit_best_streak = models.IntegerField(default=0)
+    
+    STATUS_CHOICES = [
+        ("active", "Active"),       # Currently being tracked
+        ("paused", "Paused"),       # Temporarily stopped but streaks are saved
+        ("inactive", "Inactive"),   # Stopped tracking, streak resets
+    ]
+    habit_status = models.CharField(
+        max_length=10, 
+        choices=STATUS_CHOICES, 
+        default="active"
+    ) 
+    habit_last_streak = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.habit_name} ({self.habit_occurrence})"
     
     def get_current_streak(self):
         """
-        Calculates the current streak of consecutive habit completions.
+        Calculates the current streak based on the last completed habit tracking.
+        - If Paused, return the last known streak before pausing.
+        - If Inactive, reset streak to 0.
+        - If Active, return the current streak.
         """
+
+        if self.habit_status == "inactive":
+            return 0  # Inactive habits always reset streaks
+
+        if self.habit_status == "paused":
+            return self.habit_last_streak  # ⏸ Return last streak before pausing
+        
         completions = self.completions.order_by("-completion_date")
 
         if not completions.exists():

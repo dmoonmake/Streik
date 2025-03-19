@@ -31,7 +31,7 @@ Feature: Habit Management, Streak Tracking & Analytics.
         Then the habit should no longer exist
 
     # ✅ Streak Tracking
-    Scenario: User marks a habit as completed
+    Scenario: User marks a active habit as completed
         Given I have an existing habit
         When I complete the habit for today
         Then my current streak should increase
@@ -57,3 +57,8 @@ Feature: Habit Management, Streak Tracking & Analytics.
         Given I have multiple tracked habits
         When I view the habit details
         Then I should see its longest recorded streak
+
+    Scenario: User visits analytics page
+        Given I have multiple tracked habits
+        When I visit my analytics page
+        Then I should see the habit with the longest run streak
