@@ -51,19 +51,34 @@ def create_habit(request):
 
 def edit_habit(request, habit_id):
     """
-    Allows users to edit an existing habit.
+    Allows users to edit an existing habit, updating the streak correctly based on status changes.
     """
     habit = get_object_or_404(Habit, habit_id=habit_id)
 
     if request.method == "POST":
         form = HabitForm(request.POST, instance=habit)
         if form.is_valid():
+            new_status = form.cleaned_data["habit_status"]
+
+            # Store last streak before pausing
+            if habit.habit_status == "active" and new_status == "paused":
+                habit.habit_last_streak = max(habit.habit_last_streak, habit.get_current_streak())
+
+            # Restore last streak when reactivating a paused habit
+            elif habit.habit_status == "paused" and new_status == "active":
+                habit.habit_last_streak = max(habit.habit_last_streak, habit.get_current_streak())
+
+            # Reset streak when inactivating a habit
+            elif new_status == "inactive":
+                habit.habit_last_streak = 0
+
             form.save()
             return redirect("habit_detail", habit_id=habit.habit_id)
     else:
         form = HabitForm(instance=habit)
 
     return render(request, "habits/edit_habit.html", {"form": form, "habit": habit})
+
 
 
 def delete_habit(request, habit_id):

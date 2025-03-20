@@ -2,7 +2,7 @@
 
 {% block content %}
 <h2>Habits</h2>
-<a href="{% url 'create_habit' %}">➕ Add New Habit</a>
+<a href="{% url 'create_habit' %}"><i class="fa-solid fa-plus"></i>Add Habit</a>
 
 <!-- Sorting & Filtering Form -->
 <form method="GET">
@@ -30,7 +30,7 @@
         <option value="habit_occurrence" {% if sort_by == "habit_occurrence" %}selected{% endif %}>Occurrence</option>
     </select>
 
-    <button type="submit">Apply</button>
+    <button type="submit"><i class="fa-solid fa-filter"></i></button>
 </form>
 
 <!-- Habit Table -->
@@ -61,15 +61,15 @@
                         {% if habit.habit_status == "paused" or habit.habit_status == "inactive" %} 
                             disabled style="background-color: grey; cursor: not-allowed;" 
                         {% endif %}>
-                        ✅
+                        <i class="fa-solid fa-check"></i>
                     </button>
                 </form>
 
                 <!-- Edit Button -->
-                <a href="{% url 'edit_habit' habit.habit_id %}"><button>✏️</button></a>
+                <a href="{% url 'edit_habit' habit.habit_id %}"><button><i class="fa-solid fa-pen"></i></button></a>
 
                 <!-- Delete Button -->
-                <a href="{% url 'delete_habit' habit.habit_id %}"><button style="background-color: red;">🗑️</button></a>
+                <a href="{% url 'delete_habit' habit.habit_id %}"><button style="background-color: red;"><i class="fa-solid fa-trash"></i></button></a>
             </td>
         </tr>
         {% empty %}

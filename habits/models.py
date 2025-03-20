@@ -53,6 +53,10 @@ class Habit(models.Model):
         if self.habit_status == "paused":
             return self.habit_last_streak  # ⏸ Return last streak before pausing
         
+        # Restore last streak if reactivated
+        if self.habit_status == "active" and self.habit_last_streak > 0:
+            return self.habit_last_streak 
+        
         completions = self.completions.order_by("-completion_date")
 
         if not completions.exists():
@@ -75,6 +79,9 @@ class Habit(models.Model):
         if streak > self.habit_best_streak:
             self.habit_best_streak = streak
             self.save()
+
+        self.habit_last_streak = streak  # ✅ Store streak before pausing
+        self.save()
 
         return streak
 
