@@ -1,74 +1,37 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Analytics</h2>
+<h1>Analytics</h1>
 
-<!-- Sorting & Filtering Form -->
+<!-- Time Filter -->
 <form method="GET">
-  <label for="filter_occurrence">Filter by Occurrence:</label>
-  <select name="filter_by_occurrence" id="filter_occurrence">
-      <option value="all" {% if filter_by_occurrence == "all" %}selected{% endif %}>All</option>
-      <option value="daily" {% if filter_by_occurrence == "daily" %}selected{% endif %}>Daily</option>
-      <option value="weekly" {% if filter_by_occurrence == "weekly" %}selected{% endif %}>Weekly</option>
-      <option value="monthly" {% if filter_by_occurrence == "monthly" %}selected{% endif %}>Monthly</option>
-  </select>
-
-  <!-- Filter by Status -->
-  <label for="filter_status">Filter by Status:</label>
-  <select name="filter_by_status" id="filter_status">
-      <option value="all" {% if filter_by_status == "all" %}selected{% endif %}>All</option>
-      <option value="active" {% if filter_by_status == "active" %}selected{% endif %}>Active</option>
-      <option value="paused" {% if filter_by_status == "paused" %}selected{% endif %}>Paused</option>
-      <option value="inactive" {% if filter_by_status == "inactive" %}selected{% endif %}>Inactive</option>
-  </select>
-
-  <label for="sort">Sort by:</label>
-  <select name="sort_by" id="sort">
-      <option value="habit_name" {% if sort_by == "habit_name" %}selected{% endif %}>Name</option>
-      <option value="streak" {% if sort_by == "streak" %}selected{% endif %}>Streak</option>
-      <option value="habit_occurrence" {% if sort_by == "habit_occurrence" %}selected{% endif %}>Occurrence</option>
-  </select>
-
-  <button type="submit"><i class="fa-solid fa-filter"></i></button>
+    <label for="time_filter">Filter by Time:</label>
+    <select name="time_filter" id="time_filter">
+        <option value="all" {% if time_filter == "all" %}selected{% endif %}>All Time</option>
+        <option value="last_7_days" {% if time_filter == "last_7_days" %}selected{% endif %}>Last 7 Days</option>
+        <option value="last_30_days" {% if time_filter == "last_30_days" %}selected{% endif %}>Last 30 Days</option>
+    </select>
+    <button type="submit"><i class="fa-solid fa-filter"></i> Apply</button>
 </form>
 
-<!-- Habit Table -->
-<table>
-  <thead>
-      <tr>
-          <th>Habit Name</th>
-          <th>Occurrence</th>
-          <th>Status</th>
-          <th>Streak 🔥</th>
-          <th>Best Streak 🏆</th>
-      </tr>
-  </thead>
-  <tbody>
-      {% for habit in habits %}
-      <tr>
-          <td><a href="{% url 'habit_detail' habit.habit_id %}">{{ habit.habit_name }}</a></td>
-          <td>{{ habit.habit_occurrence }}</td>
-          <td>{{ habit.habit_status }}</td>
-          <td>{{ habit.get_current_streak }}</td>
-          <td>{{ habit.habit_best_streak }}</td>
-      </tr>
-      {% empty %}
-      <tr>
-          <td colspan="3">No habits found.</td>
-      </tr>
-      {% endfor %}
-  </tbody>
-</table>
-
-<!-- Habit with Longest Streak -->
+<!-- Analytics Overview -->
+<h2>Overall Insights</h2>
 <h3>Longest Run Streak</h3>
-{% if top_habit %}
-    <p><strong>{{ top_habit.habit_name }}</strong> has the longest streak of <strong>{{ top_habit.habit_best_streak }}</strong> days.</p>
+{% if longest_streak_habits %}
+        {% for habit in longest_streak_habits %}
+            <li><strong>{{ habit.habit_name }}</strong> - {{ habit.habit_best_streak }} time(s)</li>
+        {% endfor %}
 {% else %}
     <p>No tracked habits yet.</p>
 {% endif %}
-<!-- Load Plotly -->
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<p><strong>Total Completed Habit:</strong> {{ total_completed }}</p>
+<!-- <p><strong>Average Streak Length:</strong> {{ average_streak }} days</p> -->
+
+<!-- ✅ Completion Trend Chart -->
+<h3>Completion Trends Over Time</h3>
+{{ completion_trend_chart|safe }}
+
 
 <!-- Habit Status Breakdown -->
 <h3>Habit Status Overview</h3>
@@ -77,4 +40,7 @@
 <!-- Habit Streak Trends -->
 <h3>Habit Streak Trends</h3>
 {{ streak_chart_html|safe }}
+
+<!-- Load Plotly -->
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 {% endblock %}

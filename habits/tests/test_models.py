@@ -62,6 +62,6 @@ def test_mark_habit_completed():
     habit = Habit.objects.create(habit_name="Yoga", habit_occurrence="daily", habit_status="active")
     
     today = date.today()
-    Completion.objects.create(completion_habit=habit, completion_date=today)
+    Completion.objects.create(completion_habit_id=habit, completion_date=today)
     
     assert habit.get_current_streak() == 1  # ✅ Streak should increase

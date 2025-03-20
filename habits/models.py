@@ -92,7 +92,7 @@ class Completion(models.Model):
 
     Attributes:
         completion_id (AutoField): Primary key for Completion.
-        completion_habit (ForeignKey): Links the completion to a specific Habit.
+        completion_habit_id (ForeignKey): Links the completion to a specific Habit.
         completion_date (DateField): The date the habit was completed.
     
     Constraints:
@@ -100,14 +100,14 @@ class Completion(models.Model):
     """
 
     completion_id = models.AutoField(primary_key=True)
-    completion_habit = models.ForeignKey(Habit, on_delete=models.CASCADE, related_name="completions")
+    completion_habit_id = models.ForeignKey(Habit, on_delete=models.CASCADE, related_name="completions")
     completion_date = models.DateField(default=date.today)  # Default to today’s date
 
     class Meta:
-        unique_together = ("completion_habit", "completion_date")  # Prevents duplicate completions for the same day
+        unique_together = ("completion_habit_id", "completion_date")  # Prevents duplicate completions for the same day
 
     def __str__(self):
-        return f"{self.completion_habit.habit_name} completed on {self.completion_date}"
+        return f"{self.completion_habit_id.habit_name} completed on {self.completion_date}"
 
 
 class Report:

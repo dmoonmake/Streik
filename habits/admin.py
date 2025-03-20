@@ -8,6 +8,6 @@ class HabitAdmin(admin.ModelAdmin):
 
 @admin.register(Completion)
 class CompletionAdmin(admin.ModelAdmin):
-    list_display = ("completion_habit", "completion_date")
+    list_display = ("completion_habit_id", "completion_date")
 
 

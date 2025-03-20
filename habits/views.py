@@ -1,26 +1,42 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Habit, Completion
-from datetime import date
+from datetime import date, timedelta
+from django.db.models import Count, Avg
 from .forms import HabitForm
+from django.db.models import Max 
 
 import plotly.graph_objects as go
 
+# def habit_list(request):
+#     """
+#     Display a list of all habits.
+#     """
+#     habits = Habit.objects.prefetch_related("completions").all()
+#     today = date.today()
+#     return render(request, "habits/habit_list.html", {"habits": habits, "today": today})
+
 def habit_list(request):
     """
-    Display a list of all habits.
+    View for listing habits.
     """
-    habits = Habit.objects.all()
-    return render(request, "habits/habit_list.html", {"habits": habits})
+    habits = Habit.objects.all().prefetch_related("completions")
+    today = date.today()  # ✅ Ensure today's date is available in the template
 
+    context = {
+        "habits": habits,
+        "today": today,  # ✅ Pass today into the template for date comparison
+    }
+
+    return render(request, "habits/habit_list.html", context)
 
 def habit_detail(request, habit_id):
     """
     Display details of a specific habit.
     """
     habit = get_object_or_404(Habit, habit_id=habit_id)
-    completions = Completion.objects.filter(completion_habit=habit).order_by("-completion_date")
-    return render(request, "habits/habit_detail.html", {"habit": habit, "completions": completions})
-
+    today = date.today()
+    completions = Completion.objects.filter(completion_habit_id=habit).order_by("-completion_date")
+    return render(request, "habits/habit_detail.html", {"habit": habit, "completions": completions, "today": today})
 
 def mark_completed(request, habit_id):
     """
@@ -30,8 +46,8 @@ def mark_completed(request, habit_id):
     today = date.today()
 
     # Check if the habit is already completed today
-    if not Completion.objects.filter(completion_habit=habit, completion_date=today).exists():
-        Completion.objects.create(completion_habit=habit, completion_date=today)
+    if not Completion.objects.filter(completion_habit_id=habit, completion_date=today).exists():
+        Completion.objects.create(completion_habit_id=habit, completion_date=today)
 
     return redirect("habit_detail", habit_id=habit_id)
 
@@ -54,6 +70,7 @@ def edit_habit(request, habit_id):
     Allows users to edit an existing habit, updating the streak correctly based on status changes.
     """
     habit = get_object_or_404(Habit, habit_id=habit_id)
+    today = date.today()
 
     if request.method == "POST":
         form = HabitForm(request.POST, instance=habit)
@@ -71,6 +88,7 @@ def edit_habit(request, habit_id):
             # Reset streak when inactivating a habit
             elif new_status == "inactive":
                 habit.habit_last_streak = 0
+                Completion.objects.filter(completion_habit_id=habit, completion_date=today).delete() 
 
             form.save()
             return redirect("habit_detail", habit_id=habit.habit_id)
@@ -181,8 +199,36 @@ def analytics_view(request):
     # Get all habits
     habits = Habit.objects.all()
 
+
+
+    # Filter completions by date range
+    time_filter = request.GET.get("time_filter", "all")
+    today = date.today()
+
+    if time_filter == "last_7_days":
+        date_range = today - timedelta(days=7)
+    elif time_filter == "last_30_days":
+        date_range = today - timedelta(days=30)
+    else:
+        date_range = None  # No filter
+
+    # Get all completions
+    completions = Completion.objects.all()
+    if date_range:
+        completions = completions.filter(completion_date__gte=date_range)
+
     # Identify the habit with the longest streak
     top_habit = max(habits, key=lambda h: h.habit_best_streak, default=None)
+
+    # Ensure `max_streak` is not None
+    max_streak = habits.aggregate(max_streak=Max("habit_best_streak"))["max_streak"]
+
+    # Retrieve all habits with the max streak
+    longest_streak_habits = habits.filter(habit_best_streak=max_streak) if max_streak is not None else []
+
+    context = {
+        "longest_streak_habits": longest_streak_habits,
+    }
 
     # Count habits by status
     active_count = habits.filter(habit_status="active").count()
@@ -207,6 +253,42 @@ def analytics_view(request):
     else:
         habits = habits.order_by(sort_by)
 
+    # Total completed habits
+    total_completed = completions.count()
+
+    # # Most completed habit
+    # most_completed_habit = completions.values("completion_habit_id__habit_name").annotate(
+    #     count=Count("completion_habit_id")
+    # ).order_by("-count").first()
+
+    # Average streak length
+    average_streak = Habit.objects.aggregate(avg_streak=Avg("habit_best_streak"))["avg_streak"] or 0
+
+    # Completion trends over time
+    trend_data = completions.values("completion_date").annotate(count=Count("completion_id")).order_by("completion_date")
+
+    dates = [item["completion_date"] for item in trend_data]
+    counts = [item["count"] for item in trend_data]
+
+    # Generate Completion Trend Chart and convert dates to YYYY-MM-DD format (removing time)
+    dates = [date.strftime("%d-%m-%Y") for date in dates]  # Convert to string format
+
+    # Generate Completion Trend Chart
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=dates, y=counts, mode="lines+markers", name="Completions"))
+    fig.update_layout(title="Habit Completion Trends", xaxis_title="Date", yaxis_title="Completions")
+
+
+    completion_trend_chart = fig.to_html(full_html=False)
+
+    # context = {
+    #     "total_completed": total_completed,
+    #     # "most_completed_habit": most_completed_habit,
+    #     "average_streak": round(average_streak, 2),
+    #     "completion_trend_chart": completion_trend_chart,
+    #     "time_filter": time_filter,
+    # }
+
     # Generate Plotly charts
     status_chart_html = generate_status_chart()
     streak_chart_html = generate_streak_chart()
@@ -220,6 +302,12 @@ def analytics_view(request):
         "filter_by": occurrence_filter,
         "status_chart_html": status_chart_html,
         "streak_chart_html": streak_chart_html,
+        "total_completed": total_completed,
+        # "most_completed_habit": most_completed_habit,
+        "average_streak": round(average_streak, 2),
+        "completion_trend_chart": completion_trend_chart,
+        "time_filter": time_filter,
+        "longest_streak_habits": longest_streak_habits,
     }
 
     return render(request, "habits/analytics.html", context)
