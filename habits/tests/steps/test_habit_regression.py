@@ -49,26 +49,26 @@ def multiple_habits(db):
     
     # Evening Run (2-day streak)
     for i in range(2):
-        Completion.objects.create(completion_habit=habits[0], completion_date=today - timedelta(days=i))
+        Completion.objects.create(completion_habit_id=habits[0], completion_date=today - timedelta(days=i))
 
     # Weekly Yoga (4-week streak)
     for i in range(4):
-        Completion.objects.create(completion_habit=habits[1], completion_date=today - timedelta(weeks=i))
+        Completion.objects.create(completion_habit_id=habits[1], completion_date=today - timedelta(weeks=i))
 
     # Morning Reading (1-day streak)
-    Completion.objects.create(completion_habit=habits[2], completion_date=today)
+    Completion.objects.create(completion_habit_id=habits[2], completion_date=today)
 
     # Museum Visiting (3-month streak)
     for i in range(3):
-        Completion.objects.create(completion_habit=habits[3], completion_date=today - timedelta(weeks=i * 4))
+        Completion.objects.create(completion_habit_id=habits[3], completion_date=today - timedelta(weeks=i * 4))
 
     # Date Night (5-week streak)
     for i in range(5):
-        Completion.objects.create(completion_habit=habits[4], completion_date=today - timedelta(weeks=i))
+        Completion.objects.create(completion_habit_id=habits[4], completion_date=today - timedelta(weeks=i))
 
     # Weekend Hike (7-week streak)
     for i in range(7):
-        Completion.objects.create(completion_habit=habits[5], completion_date=today - timedelta(weeks=i))
+        Completion.objects.create(completion_habit_id=habits[5], completion_date=today - timedelta(weeks=i))
 
     return habits
 
@@ -144,7 +144,7 @@ def check_habit_deleted():
 @when("I complete the habit for today")
 def complete_habit_today(existing_habit):
     today = date.today()
-    Completion.objects.create(completion_habit=existing_habit, completion_date=today)
+    Completion.objects.create(completion_habit_id=existing_habit, completion_date=today)
 
 @then("my current streak should increase")
 def check_streak(existing_habit):
@@ -157,7 +157,7 @@ def check_streak(multiple_habits):
 @given("I missed completing it for a day")
 def missed_habit(existing_habit):
     today = date.today()
-    Completion.objects.create(completion_habit=existing_habit, completion_date=today - timedelta(days=2))
+    Completion.objects.create(completion_habit_id=existing_habit, completion_date=today - timedelta(days=2))
 
 @then("my streak should reset to zero")
 def check_streak_reset(existing_habit):

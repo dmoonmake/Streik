@@ -37,34 +37,52 @@
 <table>
     <thead>
         <tr>
-            <th>Habit Name</th>
+            <th>Complete?</th>
+            <th>Name</th>
             <th>Occurrence</th>
             <th>Status</th>
             <th>Streak 🔥</th>
             <th>Best Streak 🏆</th>
-            <th>Actions</th>
+            <th>Actions 📌</th>
         </tr>
     </thead>
     <tbody>
         {% for habit in habits %}
         <tr>
+            <td>
+                <!-- Complete Button (Disabled for Paused & Inactive Habits) -->
+                <form action="{% url 'mark_completed' habit.habit_id %}" method="POST" style="display:inline;">
+                    {% csrf_token %}
+                    
+                    {% with latest_completion=habit.completions.all|dictsortreversed:"completion_date"|first %}
+                        {% if habit.habit_status == "paused" or habit.habit_status == "inactive" %}
+                        <button type="submit" disabled 
+                            style="background-color: white; color: grey; cursor: not-allowed; padding: 8px 12px; border-radius: 5px;"
+                            title="This habit is {{ habit.habit_status }}. Complete option is unavailable.">
+                            <i class="fa-regular fa-circle-xmark"></i>
+                        </button>
+                        {% elif latest_completion and latest_completion.completion_date|stringformat:"Y-m-d" == today|stringformat:"Y-m-d" %}
+                        <button type="submit" disabled 
+                            style="background-color: white; color: green; cursor: not-allowed; padding: 8px 12px; border-radius: 5px;"
+                            title="This habit was already completed today.">
+                            <i class="fa-regular fa-circle-check"></i>
+                        </button>
+                        {% else %}
+                        <button type="submit" 
+                            style="background-color: white; color: blue; padding: 8px 12px; border-radius: 5px;"
+                            title="Click to mark this habit as completed.">
+                            <i class="fa-regular fa-circle"></i>
+                        </button>
+                        {% endif %}
+                    {% endwith %}
+                </form>
+            </td>
             <td><a href="{% url 'habit_detail' habit.habit_id %}">{{ habit.habit_name }}</a></td>
             <td>{{ habit.habit_occurrence }}</td>
             <td>{{ habit.habit_status }}</td>
             <td>{{ habit.get_current_streak }}</td>
             <td>{{ habit.habit_best_streak }}</td>
             <td>
-                <!-- Complete Button (Disabled for Paused & Inactive Habits) -->
-                <form action="{% url 'mark_completed' habit.habit_id %}" method="POST" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit"
-                        {% if habit.habit_status == "paused" or habit.habit_status == "inactive" %} 
-                            disabled style="background-color: grey; cursor: not-allowed;" 
-                        {% endif %}>
-                        <i class="fa-solid fa-check"></i>
-                    </button>
-                </form>
-
                 <!-- Edit Button -->
                 <a href="{% url 'edit_habit' habit.habit_id %}"><button><i class="fa-solid fa-pen"></i></button></a>
 
@@ -79,16 +97,5 @@
         {% endfor %}
     </tbody>
 </table>
-
-<!-- <ul>
-    {% for habit in habits %}
-        <li>
-            <a href="{% url 'habit_detail' habit.habit_id %}">{{ habit.habit_name }}</a>
-            ({{ habit.habit_occurrence }})
-        </li>
-    {% empty %}
-        <p>No habits found.</p>
-    {% endfor %}
-</ul> -->
 
 {% endblock %}

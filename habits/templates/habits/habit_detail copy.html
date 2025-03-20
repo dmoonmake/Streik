@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{{ habit.habit_name }}</h2> 
+<h4>🏆: {{ habit.habit_best_streak }} | 🔥: {{ habit.get_current_streak }} | {{ habit.habit_status }}</h4>
+
+<p><strong>Occurrence:</strong> {{ habit.habit_occurrence }}</p>
+<p><strong>Description:</strong> {{ habit.habit_description }}</p>
+
+<form action="{% url 'mark_completed' habit.habit_id %}" method="POST" style="display:inline;">
+    {% csrf_token %}
+    {% with latest_completion=habit.completions.all|dictsortreversed:"completion_date"|first %}
+        {% if habit.habit_status == "paused" or habit.habit_status == "inactive" %}
+        <button type="submit" disabled 
+            style="background-color: white; color: grey; cursor: not-allowed; padding: 8px 12px; border-radius: 5px;"
+            title="This habit is {{ habit.habit_status }}. Complete option is unavailable.">
+            <i class="fa-regular fa-circle-xmark"></i> Completed?
+        </button>
+        {% elif latest_completion and latest_completion.completion_date|stringformat:"Y-m-d" == today|stringformat:"Y-m-d" %}
+        <button type="submit" disabled 
+            style="background-color: white; color: green; cursor: not-allowed; padding: 8px 12px; border-radius: 5px;"
+            title="This habit was already completed today.">
+            <i class="fa-regular fa-circle-check"></i> Completed?
+        </button>
+        {% else %}
+        <button type="submit" 
+            style="background-color: white; color: blue; padding: 8px 12px; border-radius: 5px;"
+            title="Click to mark this habit as completed.">
+            <i class="fa-regular fa-circle"></i> Completed?
+        </button>
+        {% endif %}
+    {% endwith %}
+</form>
+
+<h3>Completion History</h3>
+<ul>
+    {% for completion in completions %}
+        {% if completion.completion_date == today %}
+            <li style="color: green; font-weight: bold;">✔ Today</li>
+        {% else %}
+            <li>{{ completion.completion_date }}</li>
+        {% endif %}
+    {% empty %}
+        <p>No completions recorded.</p>
+    {% endfor %}
+</ul>
+
+<a href="{% url 'habit_list' %}">Back to Habit List</a>
+{% endblock %}
