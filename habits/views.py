@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from django.db.models import Count, Avg
 from .forms import HabitForm
 from django.db.models import Max 
+from django.utils.safestring import mark_safe
 
 import plotly.graph_objects as go
 
@@ -22,9 +23,16 @@ def habit_list(request):
     habits = Habit.objects.all().prefetch_related("completions")
     today = date.today()  # ✅ Ensure today's date is available in the template
 
+   # Attach latest completion to each habit
+    for habit in habits:
+        latest = habit.completions.filter(completion_deleted=False).order_by("-completion_date").first()
+        habit.latest_completion = latest.completion_date if latest else None
+        habit.latest_completion_deleted = latest.completion_deleted if latest else False
+
     context = {
         "habits": habits,
         "today": today,  # ✅ Pass today into the template for date comparison
+        "latest_completion": latest_completion
     }
 
     return render(request, "habits/habit_list.html", context)
@@ -36,7 +44,26 @@ def habit_detail(request, habit_id):
     habit = get_object_or_404(Habit, habit_id=habit_id)
     today = date.today()
     completions = Completion.objects.filter(completion_habit_id=habit).order_by("-completion_date")
-    return render(request, "habits/habit_detail.html", {"habit": habit, "completions": completions, "today": today})
+    latest_completion = completions.first()
+
+    # ✅ Prepare data for Plotly
+    dates = [c.completion_date.strftime("%Y-%m-%d") for c in completions]
+    counts = [1] * len(dates)  # Just mark 1 per completion
+
+    # ✅ Create Plotly chart
+    fig = go.Figure()
+    fig.add_trace(go.Bar(x=dates, y=counts, marker_color="blue"))
+    fig.update_layout(
+        title=f"Completion History for {habit.habit_name}",
+        xaxis_title="Date",
+        yaxis_title="Completed",
+        yaxis=dict(tickvals=[1], ticktext=["✔"]),
+        height=300
+    )
+
+    chart_html = mark_safe(fig.to_html(include_plotlyjs=False, full_html=False))
+
+    return render(request, "habits/habit_detail.html", {"habit": habit, "completions": completions, "today": today, "latest_completion": latest_completion, "chart_html": chart_html})
 
 def mark_completed(request, habit_id):
     """
@@ -45,8 +72,16 @@ def mark_completed(request, habit_id):
     habit = get_object_or_404(Habit, habit_id=habit_id)
     today = date.today()
 
-    # Check if the habit is already completed today
-    if not Completion.objects.filter(completion_habit_id=habit, completion_date=today).exists():
+    # Check if a completion exists for today
+    completion = Completion.objects.filter(completion_habit_id=habit, completion_date=today).first()
+
+    if completion:
+        if completion.completion_deleted:
+            # ✅ Reactivate the deleted completion instead of blocking
+            completion.completion_deleted = False
+            completion.save()
+    else:
+        # ✅ Create a new completion if none exists
         Completion.objects.create(completion_habit_id=habit, completion_date=today)
 
     return redirect("habit_detail", habit_id=habit_id)
@@ -87,8 +122,9 @@ def edit_habit(request, habit_id):
 
             # Reset streak when inactivating a habit
             elif new_status == "inactive":
-                habit.habit_last_streak = 0
-                Completion.objects.filter(completion_habit_id=habit, completion_date=today).delete() 
+                habit.habit_last_streak = 0 # Reset streak
+                Completion.objects.filter(completion_habit_id=habit, completion_date=today).update(completion_deleted=True)  # Mark as deleted instead of removing
+
 
             form.save()
             return redirect("habit_detail", habit_id=habit.habit_id)
@@ -253,8 +289,17 @@ def analytics_view(request):
     else:
         habits = habits.order_by(sort_by)
 
-    # Total completed habits
-    total_completed = completions.count()
+    # # Total completed habits
+    # total_completed = completions.count()
+
+    # ✅ Count all completed habits (including soft-deleted ones)
+    total_completed_habits = Completion.objects.filter(completion_deleted=False).values("completion_habit_id").distinct().count()
+
+    # ✅ Count active completed habits
+    active_completed_habits = Completion.objects.filter(completion_habit_id__habit_status="active", completion_deleted=False).values("completion_habit_id").distinct().count()
+
+    # ✅ Count inactive completed habits (previously completed but now inactive)
+    inactive_completed_habits = total_completed_habits - active_completed_habits
 
     # # Most completed habit
     # most_completed_habit = completions.values("completion_habit_id__habit_name").annotate(
@@ -302,8 +347,11 @@ def analytics_view(request):
         "filter_by": occurrence_filter,
         "status_chart_html": status_chart_html,
         "streak_chart_html": streak_chart_html,
-        "total_completed": total_completed,
+        # "total_completed": total_completed,
         # "most_completed_habit": most_completed_habit,
+        "total_completed_habits": total_completed_habits,
+        "active_completed_habits": active_completed_habits,
+        "inactive_completed_habits": inactive_completed_habits,
         "average_streak": round(average_streak, 2),
         "completion_trend_chart": completion_trend_chart,
         "time_filter": time_filter,

@@ -25,7 +25,11 @@
     <p>No tracked habits yet.</p>
 {% endif %}
 
-<p><strong>Total Completed Habit:</strong> {{ total_completed }}</p>
+<h2>Habit Completion Overview</h2>
+<h3><strong>Total Completed Habits:</strong> {{ total_completed_habits }}</h3>
+<p><strong>Active Completed Habits:</strong> {{ active_completed_habits }}</p>
+<p><strong>Previously Completed but Now Inactive:</strong> {{ inactive_completed_habits }}</p>
+
 <!-- <p><strong>Average Streak Length:</strong> {{ average_streak }} days</p> -->
 
 <!-- ✅ Completion Trend Chart -->

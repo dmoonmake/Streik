@@ -41,46 +41,119 @@ class Habit(models.Model):
     
     def get_current_streak(self):
         """
-        Calculates the current streak based on the last completed habit tracking.
-        - If Paused, return the last known streak before pausing.
-        - If Inactive, reset streak to 0.
-        - If Active, return the current streak.
+        Calculates the current streak based on the habit's status and occurrence:
+        - If paused, return the last streak before pausing.
+        - If inactive, return 0.
+        - If active, calculate streak using the occurrence cycle.
         """
+        
+        # if not valid_completions.exists():
+        #     return 0  # No valid completions found
 
+        # if self.habit_status == "inactive":
+        #     return 0  # Inactive habits always reset streaks
+
+        # if self.habit_status == "paused":
+        #     return self.habit_last_streak  # ⏸ Return last streak before pausing
+        
+        # # Restore last streak if reactivated
+        # if self.habit_status == "active" and self.habit_last_streak > 0:
+        #     return self.habit_last_streak 
+        
+        # completions = self.completions.filter(completion_deleted=False).order_by("-completion_date")
+
+        # if not completions.exists():
+        #     return 0  # No completions, streak is 0
+
+        # streak = 0
+        # today = date.today()
+
+        # for i, completion in enumerate(completions):
+        #     if i == 0 and completion.completion_date == today:
+        #         streak += 1
+        #     elif i > 0:
+        #         expected_date = completions[i - 1].completion_date - timedelta(days=1)
+        #         if completion.completion_date == expected_date:
+        #             streak += 1
+        #         else:
+        #             break  # Streak ends if there is a gap
+
+        # # Update best streak if the current streak is higher
+        # if streak > self.habit_best_streak:
+        #     self.habit_best_streak = streak
+        #     self.save()
+
+        # self.habit_last_streak = streak  # ✅ Store streak before pausing
+        # self.save()
+
+        # return streak
         if self.habit_status == "inactive":
-            return 0  # Inactive habits always reset streaks
+            return 0
 
         if self.habit_status == "paused":
-            return self.habit_last_streak  # ⏸ Return last streak before pausing
-        
-        # Restore last streak if reactivated
-        if self.habit_status == "active" and self.habit_last_streak > 0:
-            return self.habit_last_streak 
-        
-        completions = self.completions.order_by("-completion_date")
+            return self.habit_last_streak
 
+        completions = self.completions.filter(completion_deleted=False).order_by("completion_date")
         if not completions.exists():
-            return 0  # No completions, streak is 0
+            return 0
 
-        streak = 0
         today = date.today()
+        streak = 0
 
-        for i, completion in enumerate(completions):
-            if i == 0 and completion.completion_date == today:
+        if self.habit_occurrence == "daily":
+            # Consecutive daily completions
+            expected_date = today
+            valid_dates = [c.completion_date for c in completions]
+
+            while expected_date in valid_dates:
                 streak += 1
-            elif i > 0:
-                expected_date = completions[i - 1].completion_date - timedelta(days=1)
-                if completion.completion_date == expected_date:
-                    streak += 1
-                else:
-                    break  # Streak ends if there is a gap
+                expected_date -= timedelta(days=1)
 
-        # Update best streak if the current streak is higher
+        elif self.habit_occurrence == "weekly":
+            # Consecutive weekly buckets (start of the week)
+            weeks = []
+            for c in completions:
+                week_start = c.completion_date - timedelta(days=c.completion_date.weekday())
+                if week_start not in weeks:
+                    weeks.append(week_start)
+
+            weeks = sorted(weeks, reverse=True)
+            current_week = today - timedelta(days=today.weekday())
+
+            for week in weeks:
+                if week == current_week:
+                    streak += 1
+                    current_week -= timedelta(weeks=1)
+                else:
+                    break
+
+        elif self.habit_occurrence == "monthly":
+            # Consecutive calendar months
+            months = []
+            for c in completions:
+                month = (c.completion_date.year, c.completion_date.month)
+                if month not in months:
+                    months.append(month)
+
+            months = sorted(months, reverse=True)
+            current_month = (today.year, today.month)
+
+            for month in months:
+                if month == current_month:
+                    streak += 1
+                    # move to previous month
+                    y, m = current_month
+                    if m == 1:
+                        current_month = (y - 1, 12)
+                    else:
+                        current_month = (y, m - 1)
+                else:
+                    break
+
+        # Update last and best streaks
+        self.habit_last_streak = streak
         if streak > self.habit_best_streak:
             self.habit_best_streak = streak
-            self.save()
-
-        self.habit_last_streak = streak  # ✅ Store streak before pausing
         self.save()
 
         return streak
@@ -102,6 +175,7 @@ class Completion(models.Model):
     completion_id = models.AutoField(primary_key=True)
     completion_habit_id = models.ForeignKey(Habit, on_delete=models.CASCADE, related_name="completions")
     completion_date = models.DateField(default=date.today)  # Default to today’s date
+    completion_deleted = models.BooleanField(default=False)  # Track if completion was deleted
 
     class Meta:
         unique_together = ("completion_habit_id", "completion_date")  # Prevents duplicate completions for the same day

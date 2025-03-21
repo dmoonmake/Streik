@@ -23,7 +23,9 @@
                         title="This habit is {{ habit.habit_status }}. Completion is unavailable.">
                         <i class="fa-regular fa-circle-xmark"></i> Completion Disabled
                     </button>
-                {% elif latest_completion and latest_completion.completion_date|stringformat:"Y-m-d" == today|stringformat:"Y-m-d" %}
+
+                    {% elif latest_completion and latest_completion.completion_date == today and not latest_completion.completion_deleted %}
+                    <!-- Green Button for Completed Habit -->
                     <button type="submit" disabled 
                         style="background-color: green; color: white; cursor: not-allowed; padding: 12px 16px; border-radius: 5px; font-size: 16px;"
                         title="This habit was already completed today.">
@@ -45,8 +47,10 @@
     <ul style="list-style-type: none; padding: 0;">
         {% for completion in completions %}
             <li style="padding: 8px; font-size: 14px; {% if completion.completion_date == today %}color: green; font-weight: bold;{% endif %}">
-                {% if completion.completion_date == today %}
+                {% if completion.completion_date == today and not completion.completion_deleted %}
                     ✔ Today
+                {% elif completion.completion_date == today and completion.completion_deleted %}
+                    -
                 {% else %}
                     {{ completion.completion_date }}
                 {% endif %}
@@ -55,6 +59,12 @@
             <p style="color: grey;">No completions recorded.</p>
         {% endfor %}
     </ul>
+
+    <!-- Completion Chart -->
+    <h3>Completion Chart</h3>
+    <!-- Load Plotly.js if not already included -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    {{ chart_html|safe }}
 
     <!-- Back Button -->
     <div style="margin-top: 20px;">

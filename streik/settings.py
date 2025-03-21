@@ -106,11 +106,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
 
 USE_I18N = True
 
-USE_TZ = True
+TIME_ZONE = "Europe/Amsterdam"  # or your local zone
+USE_TZ = False  # if you're not using timezone-aware datetime
 
 
 # Static files (CSS, JavaScript, Images)
