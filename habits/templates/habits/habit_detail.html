@@ -66,14 +66,7 @@
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     {{ chart_html|safe }}
 
-    <!-- Back Button -->
-    <div style="margin-top: 20px;">
-        <a href="{% url 'habit_list' %}">
-            <button style="background-color: #ccc; color: black; padding: 10px 14px; border-radius: 5px; font-size: 14px;">
-                Back to Habit List
-            </button>
-        </a>
-    </div>
+    <a href="{% url 'habit_list' %}">Back to Habit List</a>
 
 </div>
 {% endblock %}

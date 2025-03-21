@@ -1,6 +1,6 @@
 import pytest
 from datetime import date, timedelta
-from habits.models import Habit, Completion
+from habits.models import Habit, Completion, Report
 
 pytestmark = pytest.mark.django_db
 
@@ -97,6 +97,25 @@ def test_daily_habit_streak_multiple_days():
 
     assert habit.get_current_streak() == 3
 
+def test_daily_streak_break():
+    habit = Habit.objects.create(habit_name="Meditate", habit_occurrence="daily", habit_status="active")
+    today = date.today()
+
+    Completion.objects.create(completion_habit_id=habit, completion_date=today)
+    Completion.objects.create(completion_habit_id=habit, completion_date=today - timedelta(days=2))  # skipped a day
+
+    assert habit.get_current_streak() == 1  # streak restarted from today only
+
+def test_daily_streak_ignores_deleted():
+    habit = Habit.objects.create(habit_name="Read", habit_occurrence="daily", habit_status="active")
+    today = date.today()
+
+    Completion.objects.create(completion_habit_id=habit, completion_date=today, completion_deleted=True)
+    Completion.objects.create(completion_habit_id=habit, completion_date=today - timedelta(days=1))
+
+    assert habit.get_current_streak() == 0
+
+
 def test_weekly_habit_streak_respects_week_cycle():
     """Test weekly habit only counts one per week."""
     habit = Habit.objects.create(habit_name="Run", habit_occurrence="weekly", habit_status="active")
@@ -105,6 +124,23 @@ def test_weekly_habit_streak_respects_week_cycle():
     Completion.objects.create(completion_habit_id=habit, completion_date=date.today() - timedelta(days=14))
 
     assert habit.get_current_streak() == 3
+
+def test_weekly_streak_skipped_week():
+    habit = Habit.objects.create(habit_name="Clean house", habit_occurrence="weekly", habit_status="active")
+
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 1, 1))
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 1, 15))  # skipped Jan 8
+
+    assert habit.get_current_streak() == 1  # restarted from Jan 15
+
+def test_weekly_streak_multiple_completions_same_week():
+    habit = Habit.objects.create(habit_name="Grocery Shopping", habit_occurrence="weekly", habit_status="active")
+
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 2, 1))
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 2, 2))  # same week
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 2, 8))  # next week
+
+    assert habit.get_current_streak() == 2
 
 def test_monthly_habit_streak_respects_month_cycle():
     """Test monthly habit streak counts once per calendar month."""
@@ -115,6 +151,50 @@ def test_monthly_habit_streak_respects_month_cycle():
 
     assert habit.get_current_streak() == 3
 
+def test_monthly_streak_resets_after_missed_month():
+    habit = Habit.objects.create(habit_name="Reports", habit_occurrence="monthly", habit_status="active")
+
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 1, 20))
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 2, 10))
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 4, 1))  # March skipped
+
+    assert habit.get_current_streak() == 1  # Only counts from April
+
+def test_monthly_streak_restart_after_break():
+    habit = Habit.objects.create(habit_name="Finances", habit_occurrence="monthly", habit_status="active")
+
+    # Old streak
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 1, 5))
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 2, 6))
+
+    # Skipped March
+
+    # Restart
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 4, 7))
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 5, 2))
+
+    assert habit.get_current_streak() == 2  # Restarted streak from April
+
+def test_monthly_streak_with_multiple_same_month_completions():
+    habit = Habit.objects.create(habit_name="Stretching", habit_occurrence="monthly", habit_status="active")
+
+    # Same month, only first should count
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 3, 5))
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 3, 15))
+
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 4, 5))
+
+    assert habit.get_current_streak() == 2
+
+def test_monthly_streak_ignores_deleted_completion():
+    habit = Habit.objects.create(habit_name="Reading", habit_occurrence="monthly", habit_status="active")
+
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 1, 5), completion_deleted=True)
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 2, 5))
+
+    assert habit.get_current_streak() == 1  # January is ignored
+
+
 def test_soft_deleted_completion_ignored_in_streak():
     """Test that deleted completions do not count toward streak."""
     habit = Habit.objects.create(habit_name="Push-ups", habit_occurrence="daily", habit_status="active")
@@ -124,3 +204,20 @@ def test_soft_deleted_completion_ignored_in_streak():
     Completion.objects.create(completion_habit_id=habit, completion_date=today)
 
     assert habit.get_current_streak() == 1  # Skipped yesterday due to deleted record
+
+def test_streak_inactive_habit_returns_zero():
+    habit = Habit.objects.create(habit_name="Skip", habit_occurrence="daily", habit_status="inactive")
+    assert habit.get_current_streak() == 0
+
+def test_streak_paused_habit_returns_last():
+    habit = Habit.objects.create(habit_name="Break", habit_occurrence="weekly", habit_status="paused", habit_last_streak=3)
+    assert habit.get_current_streak() == 3
+
+def test_report_returns_longest_streak():
+    habit = Habit.objects.create(habit_name="Read", habit_occurrence="daily", habit_status="active")
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 1, 1))
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 1, 2))
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 1, 4))  # Break
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 1, 5))
+    Completion.objects.create(completion_habit_id=habit, completion_date=date(2025, 1, 6))
+    assert Report.get_longest_streak(habit.habit_id) == 3

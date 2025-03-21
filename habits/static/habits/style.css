@@ -1,6 +1,6 @@
 /* === Global Styles === */
 body {
-  font-family: 'Lato', sans-serif; 
+  font-family: 'Lato', sans-serif;
   background-color: #EEEEEE;
   color: #201E43;
   margin: 0;
@@ -11,22 +11,22 @@ body {
 }
 
 h1, h2, h3, p, a, button {
-  font-family: 'Lato', sans-serif;  /* ✅ Apply Lato to common elements */
+  font-family: 'Lato', sans-serif;
 }
 
 /* === Header & Navigation === */
 header {
   width: 100%;
-  background: linear-gradient(135deg, #134B70, #508C9B); 
+  background: linear-gradient(135deg, #134B70, #508C9B);
   padding: 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   text-align: center;
   position: relative;
 }
 
 header h1 {
   color: white;
-  font-size: 24px; 
+  font-size: 24px;
   font-weight: bold;
   margin: 0;
 }
@@ -40,7 +40,7 @@ nav a {
   color: #333;
   margin: 0 15px;
   font-weight: bold;
-  font-size: 18px;
+  font-size: 14px;
   padding: 10px;
   transition: color 0.3s ease, background 0.3s ease;
 }
@@ -52,7 +52,7 @@ nav a:hover {
 /* === Mobile Navigation === */
 .menu-icon {
   display: none;
-  font-size: 28px;
+  font-size: 14px;
   color: white;
   cursor: pointer;
   position: absolute;
@@ -77,7 +77,7 @@ nav a:hover {
     display: block;
     padding: 10px;
     text-align: center;
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .menu-icon {
@@ -104,8 +104,8 @@ button {
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 16px;
-  transition: 0.3s;
+  font-size: 14px;
+  transition: 0.3s ease;
 }
 
 button:hover {
@@ -126,7 +126,7 @@ ul li {
   border-radius: 5px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   font-weight: bold;
-  color: #201E43
+  color: #201E43;
 }
 
 /* === Footer === */
@@ -138,19 +138,25 @@ footer {
 }
 
 /* === Table Styles === */
+.table-responsive {
+  overflow-x: auto;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+  display: block;
+}
+
 table {
   width: 100%;
-  max-width: 800px;
   border-collapse: collapse;
-  margin-top: 20px;
   background: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border-radius: 8px;
   overflow: hidden;
+  font-size: 10px; 
 }
 
 thead {
-  background: #134B70; /* Deep Blue */
+  background: #134B70;
   color: white;
 }
 
@@ -158,19 +164,61 @@ th, td {
   padding: 14px;
   text-align: left;
   border-bottom: 1px solid #ddd;
+  white-space: nowrap;
 }
 
 tbody tr:hover {
   background: #f9f9f9;
 }
 
-/* === Button Styles Inside Table === */
+/* === Buttons Inside Table === */
 td button {
-  font-size: 14px;
+  font-size: 10px;
   padding: 5px 10px;
   margin-right: 5px;
 }
 
 td form {
   display: inline;
+}
+
+/* === Responsive Table for Mobile === */
+@media (max-width: 768px) {
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+  table {
+    min-width: 600px;
+    font-size: 10px; 
+  }
+
+  th, td {
+    font-size: 10px;
+  }
+}
+
+/* === Mobile-Friendly Font Sizes === */
+html {
+  font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 10px;
+  }
+}
+
+/* === Form Styles === */
+input, select, textarea {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 15px;
 }

@@ -45,6 +45,8 @@
 <h3>Habit Streak Trends</h3>
 {{ streak_chart_html|safe }}
 
+<a href="{% url 'habit_list' %}">Back to Habit List</a>
+
 <!-- Load Plotly -->
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 {% endblock %}

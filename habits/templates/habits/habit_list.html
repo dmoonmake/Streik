@@ -2,7 +2,13 @@
 
 {% block content %}
 <h2>Habits</h2>
-<a href="{% url 'create_habit' %}"><i class="fa-solid fa-plus"></i>Add Habit</a>
+<div style="margin-top: 20px;">
+    <a href="{% url 'create_habit' %}">
+        <button style="background-color: #ccc; color: black; padding: 10px 14px; border-radius: 5px; font-size: 14px;">
+            <i class="fa-solid fa-plus"></i>Add Habit
+        </button>
+    </a>
+</div>
 
 <!-- Sorting & Filtering Form -->
 <form method="GET">
@@ -34,22 +40,23 @@
 </form>
 
 <!-- Habit Table -->
+<div class="table-responsive">
 <table>
     <thead>
         <tr>
-            <th>Complete?</th>
+            <th>Done?</th>
             <th>Name</th>
-            <th>Occurrence</th>
+            <th><i class="fa-regular fa-calendar-days"></i></th>
             <th>Status</th>
-            <th>Streak 🔥</th>
-            <th>Best Streak 🏆</th>
-            <th>Actions 📌</th>
+            <th>🔥</th>
+            <th>🏆</th>
+            <th>Action</th>
         </tr>
     </thead>
     <tbody>
         {% for habit in habits %}
         <tr>
-            <td>
+            <td data-label="Complete?">
                 <!-- Complete Button (Disabled for Paused & Inactive Habits) -->
                 <form action="{% url 'mark_completed' habit.habit_id %}" method="POST" style="display:inline;">
                     {% csrf_token %}
@@ -61,7 +68,7 @@
                             title="This habit is {{ habit.habit_status }}. Complete option is unavailable.">
                             <i class="fa-regular fa-circle-xmark"></i>
                         </button>
-                        {% elif habit.latest_completion == today and not habit.latest_completion_deleted %}
+                        {% elif latest_completion and latest_completion.completion_date == today and not latest_completion.completion_deleted %}
                         <button type="submit" disabled 
                             style="background-color: white; color: green; cursor: not-allowed; padding: 8px 12px; border-radius: 5px;"
                             title="This habit was already completed today.">
@@ -81,12 +88,12 @@
 
 
             </td>
-            <td><a href="{% url 'habit_detail' habit.habit_id %}">{{ habit.habit_name }}</a></td>
-            <td>{{ habit.habit_occurrence }}</td>
-            <td>{{ habit.habit_status }}</td>
-            <td>{{ habit.get_current_streak }}</td>
-            <td>{{ habit.habit_best_streak }}</td>
-            <td>
+            <td data-label="Name"><a href="{% url 'habit_detail' habit.habit_id %}">{{ habit.habit_name }}</a></td>
+            <td data-label="Occurrence">{{ habit.habit_occurrence }}</td>
+            <td data-label="Status">{{ habit.habit_status }}</td>
+            <td data-label="Streak 🔥">{{ habit.get_current_streak }}</td>
+            <td data-label="Best Streak 🏆">{{ habit.habit_best_streak }}</td>
+            <td data-label="Action 📌">
                 <!-- Edit Button -->
                 <a href="{% url 'edit_habit' habit.habit_id %}"><button><i class="fa-solid fa-pen"></i></button></a>
 
@@ -101,5 +108,6 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
 
 {% endblock %}

@@ -25,6 +25,14 @@
             <a href="{% url 'analytics' %}">Analytics</a>
         </nav>
     </header>
+
+    <div class="menu-icon" onclick="toggleMenu()">☰</div>
+    <script>
+        function toggleMenu() {
+          const nav = document.querySelector("nav");
+          nav.style.display = nav.style.display === "flex" ? "none" : "flex";
+        }
+      </script>
     
     <main>
         {% block content %}{% endblock %}
