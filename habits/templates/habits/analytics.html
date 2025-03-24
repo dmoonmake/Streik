@@ -1,51 +1,51 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Analytics</h1>
+<h1 style="text-align: center; margin-bottom: 30px;">📊 Analytics Dashboard</h1>
 
-<!-- Time Filter -->
-<form method="GET">
-    <label for="time_filter">Filter by Time:</label>
-    <select name="time_filter" id="time_filter">
-        <option value="all" {% if time_filter == "all" %}selected{% endif %}>All Time</option>
-        <option value="last_7_days" {% if time_filter == "last_7_days" %}selected{% endif %}>Last 7 Days</option>
-        <option value="last_30_days" {% if time_filter == "last_30_days" %}selected{% endif %}>Last 30 Days</option>
-    </select>
-    <button type="submit"><i class="fa-solid fa-filter"></i> Apply</button>
-</form>
+<!-- Summary Cards -->
+<div class="dashboard-cards">
+    <div class="card">
+        <h3>Total Completed</h3>
+        <p>{{ total_completed }}</p>
+    </div>
+    <div class="card">
+        <h3>Active Completed</h3>
+        <p>{{ active_completed }}</p>
+    </div>
+    <div class="card">
+        <h3>Previously Inactive</h3>
+        <p>{{ inactive_completed }}</p>
+    </div>
+</div>
 
-<!-- Analytics Overview -->
-<h2>Overall Insights</h2>
-<h3>Longest Run Streak</h3>
-{% if longest_streak_habits %}
-        {% for habit in longest_streak_habits %}
-            <li><strong>{{ habit.habit_name }}</strong> - {{ habit.habit_best_streak }} time(s)</li>
-        {% endfor %}
-{% else %}
-    <p>No tracked habits yet.</p>
-{% endif %}
+<!-- Longest Streak -->
+<div class="section">
+    <h2>🏆 Longest Run Streak</h2>
+    {% if longest_streak_habits %}
+        <ul>
+            {% for habit in longest_streak_habits %}
+                <li><strong>{{ habit.habit_name }}</strong> — {{ habit.habit_best_streak }} day(s)</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No streaks yet.</p>
+    {% endif %}
+</div>
 
-<h2>Habit Completion Overview</h2>
-<h3><strong>Total Completed Habits:</strong> {{ total_completed_habits }}</h3>
-<p><strong>Active Completed Habits:</strong> {{ active_completed_habits }}</p>
-<p><strong>Previously Completed but Now Inactive:</strong> {{ inactive_completed_habits }}</p>
+<!-- Charts -->
+<div class="chart-section">
+    <h2>📈 Completion Trends</h2>
+    <div class="chart-container">{{ completion_trend_chart|safe }}</div>
 
-<!-- <p><strong>Average Streak Length:</strong> {{ average_streak }} days</p> -->
+    <h2>📊 Habit Status Breakdown</h2>
+    <div class="chart-container">{{ status_chart_html|safe }}</div>
 
-<!-- ✅ Completion Trend Chart -->
-<h3>Completion Trends Over Time</h3>
-{{ completion_trend_chart|safe }}
+    <h2>🔥 Streak Trends</h2>
+    <div class="chart-container">{{ streak_chart_html|safe }}</div>
+</div>
 
-
-<!-- Habit Status Breakdown -->
-<h3>Habit Status Overview</h3>
-{{ status_chart_html|safe }}
-
-<!-- Habit Streak Trends -->
-<h3>Habit Streak Trends</h3>
-{{ streak_chart_html|safe }}
-
-<a href="{% url 'habit_list' %}">Back to Habit List</a>
+<a href="{% url 'habit_list' %}" class="back-link">← Back to Habit List</a>
 
 <!-- Load Plotly -->
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>

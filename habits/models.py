@@ -18,10 +18,12 @@ class Habit(models.Model):
         habit_last_streak (IntegerField): The most recent streak of consecutive completions.
 
     Methods:
-        __str__() -> str:
-            Returns a string representation of the habit.
-        get_current_streak() -> int:
-            Calculates the current streak of consecutive completions for the habit.
+        __str__() -> str: Returns a string representation of the habit.
+        get_current_streak() -> int: Calculates the current streak of consecutive completions for the habit.
+        _calculate_daily_streak(completions, today) -> int: Helper method to calculate daily streak.
+        _calculate_weekly_streak(completions) -> int: Helper method to calculate weekly streak.
+        _calculate_monthly_streak(completions) -> int: Helper method to calculate monthly streak.
+        _update_streaks(streak) -> None: Updates the habit's last and best streaks.
     """
 
     habit_id = models.AutoField(primary_key=True)
@@ -68,36 +70,47 @@ class Habit(models.Model):
             - monthly: at the 1st of each month
         - Returns the current streak count.
         """
-
-        # Inactive habits reset streak
+# def get_current_streak(self):
+#     """
+#     Calculates and updates the current streak based on the habit's status and occurrence.
+#     """
         if self.habit_status == "inactive":
+            self.habit_last_streak = 0
+            self.save(update_fields=["habit_last_streak"])
             return 0
 
-        # Paused habits retain their last streak
         if self.habit_status == "paused":
             return self.habit_last_streak
 
-        # Get valid completions
         completions = list(
             self.completions.filter(completion_deleted=False).order_by("completion_date")
         )
 
-        if not completions:
-            return 0
+        # if not completions:
+        #     # self.habit_last_streak = 0
+        #     # self.save(update_fields=["habit_last_streak"])
+        #     return 0
 
         today = date.today()
-        streak = 0
 
         if self.habit_occurrence == "daily":
-            return self._calculate_daily_streak(completions, today)
+            streak = self._calculate_daily_streak(completions, today)
+        elif self.habit_occurrence == "weekly":
+            streak = self._calculate_weekly_streak(completions)
+        elif self.habit_occurrence == "monthly":
+            streak = self._calculate_monthly_streak(completions)
+        else:
+            streak = 0
 
-        if self.habit_occurrence == "weekly":
-            return self._calculate_weekly_streak(completions)
+        # self.habit_last_streak = streak
+        if streak > self.habit_best_streak:
+            self.habit_best_streak = streak
 
-        if self.habit_occurrence == "monthly":
-            return self._calculate_monthly_streak(completions)
-
+        self.habit_last_streak = streak
+        self.save(update_fields=["habit_last_streak", "habit_best_streak"])
         return streak
+
+
 
     def _calculate_daily_streak(self, completions, today):
         """
@@ -180,8 +193,7 @@ class Completion(models.Model):
         - unique_together ensures a habit cannot be completed more than once on the same day.
 
     Methods:
-        __str__() -> str:
-            Returns a string representation of the completion.
+        __str__() -> str: Returns a string representation of the completion.
     """
 
     completion_id = models.AutoField(primary_key=True)
@@ -200,8 +212,15 @@ class Report:
     A utility class that provides methods to generate habit reports.
 
     Methods:
-        get_longest_streak(habit_id: int) -> int:
-            Computes the longest streak of consecutive completions for a given habit.
+        get_longest_streak(habit_id: int) -> int: Computes the longest streak of consecutive completions for a given habit.
+        habits_completed_count() -> Tuple: Returns the total number of habits with completions and their statuses.
+        filter_habits_by_occurrence(occurrence: str) -> QuerySet: Filters habits by occurrence type.
+        get_habit_completion_trend() -> List: Returns completion trend data for analytics.
+        get_habits_with_longest_streak() -> QuerySet: Finds all habits that currently have the longest streak.
+        generate_status_chart() -> str: Generates a Plotly Pie Chart for Habit Statuses.
+        generate_streak_chart() -> str: Generates a Plotly Bar Chart for Habit Streaks.
+        generate_completion_trend_chart() -> str: Generates a Plotly Line Chart for Completion Trends Over Time.
+        generate_completion_chart(completions, habit_name) -> str: Generates a Plotly bar chart for an individual habit's completion history.
     """
         
     @staticmethod
@@ -213,6 +232,7 @@ class Report:
         :return: The longest streak count.
         """
         try:
+                
             habit = Habit.objects.get(habit_id=habit_id)
             completions = habit.completions.filter(completion_deleted=False).order_by("completion_date")
 
@@ -236,16 +256,30 @@ class Report:
             return 0 
         
     @staticmethod
-    def get_habits_with_longest_streak():
+    def habits_completed_count():
         """
-        Finds all habits that currently have the longest streak.
-        """
-        max_streak = Habit.objects.aggregate(max_streak=Max("habit_best_streak"))["max_streak"]
-        
-        if max_streak is None:  # Handle case when no habits exist
-            return []
+        Returns a tuple with:
+        - Total number of unique habits that have at least one (non-deleted) completion
+        - Number of those that are still active
+        - Number that are now inactive or paused but had completions before
 
-        return Habit.objects.filter(habit_best_streak=max_streak)
+        :return: (total_completed, active_completed, previously_completed_inactive)
+        """
+        # Total unique habits with non-deleted completions
+        total_completed = Completion.objects.filter(completion_deleted=False)\
+            .values("completion_habit_id").distinct().count()
+
+        # Total unique habits with non-deleted completions that are still active
+        active_completed = Completion.objects.filter(
+            completion_deleted=False,
+            completion_habit_id__habit_status="active"
+        ).values("completion_habit_id").distinct().count()
+
+        # Previously completed but no longer active (paused/inactive)
+        previously_inactive = total_completed - active_completed
+
+        return (total_completed, active_completed, previously_inactive)
+
     
     @staticmethod
     def filter_habits_by_occurrence(occurrence: str):
@@ -264,6 +298,19 @@ class Report:
         completions = Completion.objects.filter(completion_deleted=False).values("completion_date").annotate(count=Count("completion_id"))
         return [(item["completion_date"], item["count"]) for item in completions]
 
+    @staticmethod
+    def get_habits_with_longest_streak():
+        """
+        Finds all habits that currently have the longest streak.
+        """
+        max_streak = Habit.objects.aggregate(max_streak=Max("habit_best_streak"))["max_streak"]
+        
+        if max_streak is None:  # Handle case when no habits exist
+            return []
+
+        return Habit.objects.filter(habit_best_streak=max_streak)
+    
+    
     @staticmethod
     def generate_status_chart():
         """
@@ -316,7 +363,9 @@ class Report:
 
     @staticmethod
     def generate_completion_trend_chart():
-        """Generate a Plotly Line Chart for Completion Trends Over Time."""
+        """
+        Generate a Plotly Line Chart for Completion Trends Over Time.
+        """
         completions = Completion.objects.filter(completion_deleted=False).values("completion_date").annotate(
             count=models.Count("completion_id")
         ).order_by("completion_date")

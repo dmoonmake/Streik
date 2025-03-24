@@ -6,7 +6,7 @@
     <h2> Habit Details</h2>
     <!-- Habit Title & Streak Info -->
     <h1>{{ habit.habit_name }}</h1>
-    <h4>🏆 Best Streak: {{ habit.habit_best_streak }} | 🔥 Current Streak: {{ habit.get_current_streak }} | 📌 {{ habit.habit_status }}</h4>
+    <h4>🔥 Current Streak: {{ habit.habit_last_streak }} | 🏆 Best Streak: {{ habit.habit_best_streak }} | 📌 Status: {{ habit.habit_status }}</h4>
 
     <!-- Habit Details -->
     <p><strong>Occurrence:</strong> {{ habit.habit_occurrence }}</p>

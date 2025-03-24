@@ -84,14 +84,11 @@
                     {% endwith %}
                 </form>
 
-                
-
-
             </td>
             <td data-label="Name"><a href="{% url 'habit_detail' habit.habit_id %}">{{ habit.habit_name }}</a></td>
             <td data-label="Occurrence">{{ habit.habit_occurrence }}</td>
             <td data-label="Status">{{ habit.habit_status }}</td>
-            <td data-label="Streak 🔥">{{ habit.get_current_streak }}</td>
+            <td data-label="Streak 🔥">{{ habit.habit_last_streak }}</td>
             <td data-label="Best Streak 🏆">{{ habit.habit_best_streak }}</td>
             <td data-label="Action 📌">
                 <!-- Edit Button -->
