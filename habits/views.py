@@ -5,45 +5,6 @@ from .forms import HabitForm
 from django.utils.safestring import mark_safe
 import plotly.graph_objects as go
 
-### HABIT VIEWS ###
-
-# def habit_list(request):
-#     """
-#     Displays a list of all habits with sorting and filtering options.
-#     """
-#     habits = Habit.objects.prefetch_related("completions").all()
-#     today = date.today()
-#     for habit in habits:
-#         habit.habit_last_streak = habit.get_current_streak()
-#         # latest = habit.completions.filter(completion_deleted=False).order_by("-completion_date").first()
-#         # habit.latest_completion = latest.completion_date if latest else None
-#         # habit.latest_completion_deleted = latest.completion_deleted if latest else False
-
-#     # Filtering
-#     occurrence_filter = request.GET.get("filter_by_occurrence", "all")
-#     status_filter = request.GET.get("filter_by_status", "active")
-#     sort_by = request.GET.get("sort_by", "habit_name")  # Default sorting
-
-#     if occurrence_filter in ["daily", "weekly", "monthly"]:
-#         habits = habits.filter(habit_occurrence=occurrence_filter)
-
-#     if status_filter in ["active", "paused", "inactive"]:
-#         habits = habits.filter(habit_status=status_filter)
-
-#     # Sorting
-#     if sort_by == "streak":
-#         habits = sorted(habits, key=lambda h: h.get_current_streak(), reverse=True)
-#     else:
-#         habits = habits.order_by(sort_by)
-
-#     return render(request, "habits/habit_list.html", {
-#         "habits": habits,
-#         "today": today,
-#         "sort_by": sort_by,
-#         "filter_by_occurrence": occurrence_filter,
-#         "filter_by_status": status_filter,
-#     })
-
 def habit_list(request):
     """
     Display a list of all habits with sorting and filtering options.
@@ -65,18 +26,6 @@ def habit_list(request):
         habits = habits.order_by(sort_by)
 
     today = date.today()
-    # for habit in habits:
-    #     habit.current_streak = habit.get_current_streak()
-        # latest = habit.completions.filter(completion_deleted=False).order_by("-completion_date").first()
-        # habit.latest_completion = latest.completion_date if latest else None
-        # habit.latest_completion_deleted = latest.completion_deleted if latest else False
-
-    # for habit in habits:
-    #     current = habit.get_current_streak()
-    #     if habit.habit_last_streak != current:
-    #         habit.habit_last_streak = current
-    #         habit.save(update_fields=["habit_last_streak"])
-    #     habit.current_streak = current
 
     return render(request, "habits/habit_list.html", {
         "habits": habits,
@@ -85,28 +34,6 @@ def habit_list(request):
         "filter_by_status": status_filter,
         "today": today,
     })
-
-# def habit_detail(request, habit_id):
-#     """
-#     Displays the details of a specific habit.
-#     """
-#     habit = get_object_or_404(Habit, habit_id=habit_id)
-#     habit.habit_last_streak = habit.get_current_streak()
-#     today = date.today()
-
-#     completions = habit.completions.filter(completion_deleted=False).order_by("-completion_date")
-#     latest_completion = completions.first()
-
-#     # Generate Completion History Chart
-#     chart_html = Report.generate_completion_chart(completions, habit.habit_name)
-
-#     return renkder(request, "habits/habit_detail.html", {
-#         "habit": habit,
-#         "completions": completions,
-#         "today": today,
-#         "latest_completion": latest_completion,
-#         "chart_html": chart_html,
-#     })
 
 def habit_detail(request, habit_id):
     """

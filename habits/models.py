@@ -70,10 +70,6 @@ class Habit(models.Model):
             - monthly: at the 1st of each month
         - Returns the current streak count.
         """
-# def get_current_streak(self):
-#     """
-#     Calculates and updates the current streak based on the habit's status and occurrence.
-#     """
         if self.habit_status == "inactive":
             self.habit_last_streak = 0
             self.save(update_fields=["habit_last_streak"])
@@ -86,11 +82,6 @@ class Habit(models.Model):
             self.completions.filter(completion_deleted=False).order_by("completion_date")
         )
 
-        # if not completions:
-        #     # self.habit_last_streak = 0
-        #     # self.save(update_fields=["habit_last_streak"])
-        #     return 0
-
         today = date.today()
 
         if self.habit_occurrence == "daily":
@@ -102,7 +93,6 @@ class Habit(models.Model):
         else:
             streak = 0
 
-        # self.habit_last_streak = streak
         if streak > self.habit_best_streak:
             self.habit_best_streak = streak
 
