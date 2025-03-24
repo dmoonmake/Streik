@@ -72,7 +72,6 @@ def multiple_habits(db):
 
     return habits
 
-
 # ✅ Habit Management Steps
 @given("I visit the habit creation page")
 def visit_habit_page(client):

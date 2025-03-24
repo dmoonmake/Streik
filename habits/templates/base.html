@@ -26,8 +26,12 @@
         </nav>
     </header>
 
+    <!-- Menu icon for mobile view -->
     <div class="menu-icon" onclick="toggleMenu()">☰</div>
     <script>
+        /**
+         * Toggles the display of the navigation menu in mobile view.
+         */
         function toggleMenu() {
           const nav = document.querySelector("nav");
           nav.style.display = nav.style.display === "flex" ? "none" : "flex";
@@ -35,6 +39,7 @@
       </script>
     
     <main>
+        <!-- Content block to be overridden by child templates -->
         {% block content %}{% endblock %}
     </main>
 

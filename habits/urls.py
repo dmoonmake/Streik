@@ -1,5 +1,5 @@
-from django.urls import path
 from .views import habit_list, habit_detail, mark_completed, create_habit, edit_habit, delete_habit, analytics_view
+from django.urls import path
 
 urlpatterns = [
     path("", habit_list, name="habit_list"),  # Show all habits

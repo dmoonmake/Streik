@@ -1,16 +1,7 @@
-# Habit Management, Streak Tracking, and Analytics
-# As a user, I want to create, edit, and delete a habit, so that I can manage my tracking preferences.
-# As a user, I want to mark a habit as completed, so that my streak is updated.
-# As a user, I want to see my current streaks, so that I can stay motivated.
-# As a user, I want to see if I missed any habits, so that I can improve my consistency.
-# As a user, I want to view all my currently tracked habits, so that I can stay aware of my progress.
-# As a user, I want to filter habits based on their occurrence (daily, weekly), so that I can focus on specific routines.
-# As a user, I want to see which habit has the longest run streak, so that I can identify my most consistent habit.
-# As a user, I want to know the longest run streak for a specific habit, so that I can track my record-breaking performance.
 
 Feature: Habit Management, Streak Tracking & Analytics.
 
-    # ✅ Habit Management
+    # Habit Management
     Scenario: User creates a new habit
         Given I visit the habit creation page
         When I enter habit details
@@ -30,7 +21,7 @@ Feature: Habit Management, Streak Tracking & Analytics.
         And I confirm the deletion
         Then the habit should no longer exist
 
-    # ✅ Streak Tracking
+    # Streak Tracking
     Scenario: User marks a active habit as completed
         Given I have an existing habit
         When I complete the habit for today
@@ -42,7 +33,7 @@ Feature: Habit Management, Streak Tracking & Analytics.
         When I visit my habit list
         Then my streak should reset to zero
 
-    # ✅ Analytics & Insights
+    # Analytics & Insights
     Scenario: User views all tracked habits
         Given I have multiple tracked habits
         When I visit my habit list

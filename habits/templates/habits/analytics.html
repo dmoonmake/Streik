@@ -6,8 +6,8 @@
 <!-- Summary Cards -->
 <div class="dashboard-cards">
     <div class="card">
-        <h3>Total Completed</h3>
-        <p>{{ total_completed }}</p>
+        <h2>Total Completed</h2>
+        <h2>{{ total_completed }}</h2>
     </div>
     <div class="card">
         <h3>Active Completed</h3>
@@ -45,6 +45,7 @@
     <div class="chart-container">{{ streak_chart_html|safe }}</div>
 </div>
 
+<!-- Back to Habit List Link -->
 <a href="{% url 'habit_list' %}" class="back-link">← Back to Habit List</a>
 
 <!-- Load Plotly -->

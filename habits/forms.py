@@ -1,5 +1,5 @@
-from django import forms
 from .models import Habit
+from django import forms
 
 class HabitForm(forms.ModelForm):
     class Meta:
