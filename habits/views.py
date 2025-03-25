@@ -1,6 +1,6 @@
 from .forms import HabitForm
 from .models import Habit, Completion, Report
-from datetime import date
+from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.safestring import mark_safe
 import plotly.graph_objects as go
@@ -82,7 +82,7 @@ def edit_habit(request, habit_id):
         HttpResponse: The rendered edit habit page or redirects to the habit detail page.
     """
     habit = get_object_or_404(Habit, habit_id=habit_id)
-    today = date.today()
+    current = datetime.now()
     form = HabitForm(request.POST or None, instance=habit)
 
     if form.is_valid():
@@ -96,7 +96,7 @@ def edit_habit(request, habit_id):
 
         elif new_status == "inactive":
             habit.habit_last_streak = 0
-            Completion.objects.filter(completion_habit_id=habit, completion_date=today).update(completion_deleted=True)
+            Completion.objects.filter(completion_habit_id=habit, completion_date=current).update(completion_deleted=True)
 
         form.save()
         return redirect("habit_detail", habit_id=habit.habit_id)
@@ -115,12 +115,13 @@ def habit_detail(request, habit_id):
         HttpResponse: The rendered habit detail page.
     """
     habit = get_object_or_404(Habit, habit_id=habit_id)
-    today = date.today()
-    completions = Completion.objects.filter(completion_habit_id=habit).order_by("-completion_date")
+    current = datetime.now()
+    current_date = current.date()
+    completions = Completion.objects.filter(completion_habit_id=habit, completion_deleted=False).order_by("-completion_date")
     latest_completion = completions.first()
 
-    # Trigger and assign current streak
-    habit.current_streak = habit.get_current_streak()
+    # # Trigger and assign current streak
+    # habit.current_streak = habit.get_current_streak()
 
     dates = [c.completion_date.strftime("%Y-%m-%d") for c in completions]
     counts = [1] * len(dates)
@@ -140,7 +141,8 @@ def habit_detail(request, habit_id):
     context = {
         "habit": habit,
         "completions": completions,
-        "today": today,
+        "today": current,
+        "today_date": current_date,
         "latest_completion": latest_completion,
         "chart_html": chart_html
     }
@@ -172,10 +174,10 @@ def habit_list(request):
     else:
         habits = habits.order_by(sort_by)
 
-    today = date.today()
+    current = datetime.now()
     context = {
         "habits": habits,
-        "today": today,
+        "today": current,
         "sort_by": sort_by,
         "occurrence_filter": occurrence_filter,
         "status_filter": status_filter
@@ -194,9 +196,9 @@ def mark_completed(request, habit_id):
         HttpResponse: Redirects to the habit detail page.
     """
     habit = get_object_or_404(Habit, habit_id=habit_id)
-    today = date.today()
+    current = datetime.now()
 
-    completion, created = Completion.objects.get_or_create(completion_habit_id=habit, completion_date=today)
+    completion, created = Completion.objects.get_or_create(completion_habit_id=habit, completion_date=current)
     
     if not created and completion.completion_deleted:
         completion.completion_deleted = False

@@ -1,5 +1,5 @@
 
-from datetime import date, timedelta
+from datetime import timedelta, datetime
 from django.db import models
 from django.db.models import Max, Count
 import plotly.graph_objects as go
@@ -74,8 +74,9 @@ class Habit(models.Model):
         Returns:
             int: The current streak count.
         """
-        expected_date = today
-        valid_dates = {c.completion_date for c in completions}
+        expected_date = datetime.today().date()
+        
+        valid_dates = {c.completion_date.date() for c in completions}
 
         streak = 0
         while expected_date in valid_dates:
@@ -125,17 +126,17 @@ class Habit(models.Model):
             int: The current streak count.
         """
         streak = 1
-        cycle_start = completions[0].completion_date
+        cycle_start = completions[0].completion_date.date()
         expected_next = cycle_start + timedelta(weeks=1)
 
         # Check each completion to determine the streak
         for i in range(1, len(completions)):
-            if expected_next <= completions[i].completion_date < expected_next + timedelta(days=7): 
+            if expected_next <= completions[i].completion_date.date() < expected_next + timedelta(days=7): 
                 streak += 1
                 expected_next += timedelta(weeks=1)
-            elif completions[i].completion_date >= expected_next + timedelta(days=7): # Gap found
+            elif completions[i].completion_date.date() >= expected_next + timedelta(days=7): # Gap found
                 streak = 1
-                expected_next = completions[i].completion_date + timedelta(weeks=1)
+                expected_next = completions[i].completion_date.date() + timedelta(weeks=1)
 
         self._update_streaks(streak)
         return streak
@@ -175,10 +176,10 @@ class Habit(models.Model):
             self.completions.filter(completion_deleted=False).order_by("completion_date")
         )
 
-        today = date.today()
+        now = datetime.now()
 
         if self.habit_occurrence == "daily":
-            streak = self._calculate_daily_streak(completions, today)
+            streak = self._calculate_daily_streak(completions, now)
         elif self.habit_occurrence == "weekly":
             streak = self._calculate_weekly_streak(completions)
         elif self.habit_occurrence == "monthly":
@@ -200,7 +201,7 @@ class Completion(models.Model):
     Attributes:
         completion_id (AutoField): Primary key for Completion.
         completion_habit_id (ForeignKey): Links the completion to a specific Habit.
-        completion_date (DateField): The date the habit was completed.
+        completion_date (DateTimeField): The date the habit was completed.
         completion_deleted (BooleanField): Tracks if the completion was deleted.
     
     Constraints:
@@ -212,7 +213,7 @@ class Completion(models.Model):
 
     completion_id = models.AutoField(primary_key=True)
     completion_habit_id = models.ForeignKey(Habit, on_delete=models.CASCADE, related_name="completions")
-    completion_date = models.DateField(default=date.today)  # Default to today’s date
+    completion_date = models.DateTimeField(default=datetime.now)  # Default to now
     completion_deleted = models.BooleanField(default=False)  # Track if completion was deleted
 
     class Meta:
@@ -265,7 +266,7 @@ class Report:
         Returns:
             str: The HTML representation of the chart.
         """
-        dates = [c.completion_date.strftime("%Y-%m-%d") for c in completions]
+        dates = [c.completion_date.date().strftime("%Y-%m-%d") for c in completions]
         counts = [1] * len(dates)  # Each completion is counted as 1
 
         fig = go.Figure()
@@ -393,15 +394,15 @@ class Report:
 
             longest_streak = 1
             current_streak = 1
-            prev_date = completions.first().completion_date # Initialize with the first completion date
+            prev_date = completions.first().completion_date.date() # Initialize with the first completion date
 
             for completion in completions[1:]:
-                if completion.completion_date == prev_date + timedelta(days=1):
+                if completion.completion_date.date() == prev_date + timedelta(days=1):
                     current_streak += 1     
                 else:
                     longest_streak = max(longest_streak, current_streak)
                     current_streak = 1                      # Reset streak if there's a gap
-                prev_date = completion.completion_date
+                prev_date = completion.completion_date.date()
 
             return max(longest_streak, current_streak)      # Return the longest streak found
         except Habit.DoesNotExist:

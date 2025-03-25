@@ -1,6 +1,6 @@
 import pytest
 from django.urls import reverse
-from datetime import date, timedelta
+from datetime import datetime, timedelta
 from habits.models import Habit, Completion
 
 pytestmark = pytest.mark.django_db
@@ -26,7 +26,7 @@ def today_completion(test_habit):
     """Create a valid completion for today."""
     return Completion.objects.create(
         completion_habit_id=test_habit,
-        completion_date=date.today()
+        completion_date=datetime.now()
     )
 
 def test_edit_habit(client, test_habit):
@@ -50,14 +50,17 @@ def test_pause_habit_preserves_streak(client, test_habit):
     assert test_habit.habit_status == "paused"
 
 def test_reactivate_paused_habit_restores_streak(client):
-    """Test reactivating a paused habit restores previous streak based on real completions."""
+    """
+    Test reactivating a paused habit restores previous streak based on real completions.
+    """
     habit = Habit.objects.create(habit_name="Meditation", habit_occurrence="daily", habit_status="active")
+    now = datetime.now()
 
     # Simulate 4 consecutive days of completion
     for i in range(4):
         Completion.objects.create(
             completion_habit_id=habit,
-            completion_date=date.today() - timedelta(days=i)
+            completion_date=now - timedelta(days=i)
         )
 
     # Pause the habit and save its streak
@@ -72,11 +75,17 @@ def test_reactivate_paused_habit_restores_streak(client):
     assert habit.get_current_streak() == 4  # ✅ Valid, based on real data
 
 def test_inactivate_habit_resets_streak_and_deletes_today(client, test_habit, today_completion):
-    """Test setting a habit to inactive resets streak and deletes today's completion."""
-    assert Completion.objects.filter(completion_habit_id=test_habit, completion_date=date.today()).exists()
+    """
+    Test setting a habit to inactive resets streak and deletes today's completion.
+    """
+    test_habit = Habit.objects.create(habit_name="Walking", habit_occurrence="daily", habit_status="active")
+    now = datetime.now().date()
+    Completion.objects.create(completion_habit_id=test_habit, completion_date=now)
+    
+    assert Completion.objects.filter(completion_habit_id=test_habit, completion_date=now).exists()
 
     # Simulate logic performed in your view
-    Completion.objects.filter(completion_habit_id=test_habit, completion_date=date.today()).update(completion_deleted=True)
+    Completion.objects.filter(completion_habit_id=test_habit, completion_date=now).update(completion_deleted=True)
     test_habit.habit_last_streak = 0
     test_habit.habit_status = "inactive"
     test_habit.save()
@@ -84,6 +93,6 @@ def test_inactivate_habit_resets_streak_and_deletes_today(client, test_habit, to
     assert test_habit.get_current_streak() == 0
     assert not Completion.objects.filter(
         completion_habit_id=test_habit,
-        completion_date=date.today(),
+        completion_date=now,
         completion_deleted=False
     ).exists()

@@ -46,13 +46,11 @@
     <h3>Completion History</h3>
     <ul style="list-style-type: none; padding: 0;">
         {% for completion in completions %}
-            <li style="padding: 8px; font-size: 14px; {% if completion.completion_date == today %}color: green; font-weight: bold;{% endif %}">
-                {% if completion.completion_date == today and not completion.completion_deleted %}
-                    ✔ Today
-                {% elif completion.completion_date == today and completion.completion_deleted %}
-                    -
+            <li style="padding: 8px; font-size: 14px; {% if completion.completion_date.date == today_date %} color: green; font-weight: bold;{% endif %}">
+                {% if completion.completion_date.date == today_date %}
+                    ✔ Today, {{ completion.completion_date |date:"h:i" }}
                 {% else %}
-                    {{ completion.completion_date }}
+                    {{ completion.completion_date |date:"Y-m-d, h:i" }}
                 {% endif %}
             </li>
         {% empty %}
