@@ -1,11 +1,18 @@
 {% extends "base.html" %}
+
 {% block content %}
 <h2>Edit Habit</h2>
+<h1>{{ habit.habit_name }}</h1>
+
+<!-- Edit Form -->
 <form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Save Changes</button>
-    <a href="{% url 'habit_detail' habit.habit_id %}">Cancel</a>
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Save Changes</button>
+</form>
+
+<!-- Back(Cancel) to Habit List Link -->
+<a href="{% url 'habit_detail' habit.habit_id %}" class="back-link">Cancel</a>
 
 {% endblock %}
 

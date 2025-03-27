@@ -1,6 +1,9 @@
-/* === Global Styles === */
-body {
+/* === Base / Global Styles === */
+body, h1, h2, h3, p, a, button {
   font-family: 'Lato', sans-serif;
+}
+
+body {
   background-color: #EEEEEE;
   color: #201E43;
   margin: 0;
@@ -10,11 +13,17 @@ body {
   align-items: center;
 }
 
-h1, h2, h3, p, a, button {
-  font-family: 'Lato', sans-serif;
+html {
+  font-size: 14px;
 }
 
-/* === Header & Navigation === */
+@media (max-width: 480px) {
+  html {
+    font-size: 12px;
+  }
+}
+
+/* === Header === */
 header {
   width: 100%;
   background: linear-gradient(135deg, #134B70, #508C9B);
@@ -31,6 +40,7 @@ header h1 {
   margin: 0;
 }
 
+/* === Navigation === */
 nav {
   margin-top: 10px;
 }
@@ -75,7 +85,6 @@ nav a:hover {
 
   nav a {
     display: block;
-    padding: 10px;
     text-align: center;
     font-size: 14px;
   }
@@ -85,7 +94,7 @@ nav a:hover {
   }
 }
 
-/* === Main Content === */
+/* === Main Layout === */
 main {
   width: 90%;
   max-width: 800px;
@@ -97,52 +106,40 @@ main {
 }
 
 /* === Buttons === */
-button {
+button,
+.filter-btn {
   background-color: #508C9B;
   color: white;
   padding: 10px 15px;
+  font-size: 16px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 16px;
   transition: 0.3s ease;
 }
 
-button:hover {
+button:hover,
+.filter-btn:hover {
   background-color: #134B70;
   transform: scale(1.05);
 }
 
-/* === Habit List === */
-ul {
-  list-style: none;
-  padding: 0;
+td button {
+  font-size: 14px;
+  padding: 5px 10px;
+  margin-right: 5px;
 }
 
-ul li {
-  background: #ffffff;
-  margin: 10px 0;
-  padding: 15px;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  font-weight: bold;
-  color: #201E43;
+td form {
+  display: inline;
 }
 
-/* === Footer === */
-footer {
-  margin-top: 20px;
-  text-align: center;
-  color: #777;
-  font-size: 16px;
-}
-
-/* === Table Styles === */
+/* === Tables === */
 .table-responsive {
   overflow-x: auto;
   width: 100%;
-  -webkit-overflow-scrolling: touch;
   display: block;
+  -webkit-overflow-scrolling: touch;
 }
 
 table {
@@ -152,7 +149,7 @@ table {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border-radius: 8px;
   overflow: hidden;
-  font-size: 16px; 
+  font-size: 16px;
 }
 
 thead {
@@ -171,26 +168,10 @@ tbody tr:hover {
   background: #f9f9f9;
 }
 
-/* === Buttons Inside Table === */
-td button {
-  font-size: 14px;
-  padding: 5px 10px;
-  margin-right: 5px;
-}
-
-td form {
-  display: inline;
-}
-
-/* === Responsive Table for Mobile === */
 @media (max-width: 768px) {
-  .table-responsive {
-    overflow-x: auto;
-  }
-
   table {
     min-width: 600px;
-    font-size: 14px; 
+    font-size: 14px;
   }
 
   th, td {
@@ -198,33 +179,31 @@ td form {
   }
 }
 
-/* === Mobile-Friendly Font Sizes === */
-html {
-  font-size: 14px;
+/* === Lists === */
+ul {
+  list-style: none;
+  padding: 0;
 }
 
-@media (max-width: 768px) {
-  html {
-    font-size: 14px;
-  }
+ul li {
+  background: white;
+  margin: 10px 0;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  font-weight: bold;
+  color: #201E43;
 }
 
-@media (max-width: 480px) {
-  html {
-    font-size: 12px;
-  }
+/* === Footer === */
+footer {
+  margin-top: 20px;
+  text-align: center;
+  color: #777;
+  font-size: 16px;
 }
 
-/* === Form Styles === */
-input, select, textarea {
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  margin-bottom: 15px;
-}
-
-/* === Dashboard Styles === */
-
+/* === Dashboard === */
 .dashboard-cards {
   display: flex;
   flex-wrap: wrap;
@@ -236,13 +215,13 @@ input, select, textarea {
 .card {
   background: #a1edf0;
   border-left: 5px solid #134B70;
-  padding: 20px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  padding: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   text-align: center;
   min-width: 180px;
   flex-grow: 1;
-  font-size: 20px;
+  font-size: 16px;
 }
 
 .card h3 {
@@ -254,11 +233,9 @@ input, select, textarea {
   margin: 30px 0;
 }
 
-.chart-section {
-  margin-top: 40px;
-}
-
+.chart-section,
 .chart-container {
+  margin-top: 40px;
   margin-bottom: 40px;
 }
 
@@ -268,4 +245,32 @@ input, select, textarea {
   text-decoration: none;
   color: #134B70;
   font-weight: bold;
+}
+
+/* === Form Elements === */
+input,
+select,
+textarea {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 15px;
+}
+
+/* === Filters === */
+.filter-form {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-form select,
+.filter-form label {
+  font-size: 14px;
+}
+
+.filter-btn i {
+  margin-right: 4px;
 }

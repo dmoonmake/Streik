@@ -18,7 +18,7 @@ def analytics_view(request):
     habits = Habit.objects.all()
     longest_streak_habits = Report.get_habits_with_longest_streak()
     completion_trend_chart = Report.generate_completion_trend_chart()
-    total_completed, active_completed, inactive_completed = Report.habits_completed_count()
+    total_completions, active_completions, other_completions = Report.habits_completed_count()
 
     context = {
         "habits": habits,
@@ -26,9 +26,9 @@ def analytics_view(request):
         "status_chart_html": Report.generate_status_chart(),
         "streak_chart_html": Report.generate_streak_chart(),
         "completion_trend_chart": completion_trend_chart,
-        "total_completed": total_completed, 
-        "active_completed": active_completed,
-        "inactive_completed": inactive_completed,
+        "total_completions": total_completions, 
+        "active_completions": active_completions,
+        "other_completions": other_completions,
     }
 
     return render(request, "habits/analytics.html", context)
@@ -120,8 +120,6 @@ def habit_detail(request, habit_id):
     completions = Completion.objects.filter(completion_habit_id=habit, completion_deleted=False).order_by("-completion_date")
     latest_completion = completions.first()
 
-    # # Trigger and assign current streak
-    # habit.current_streak = habit.get_current_streak()
 
     dates = [c.completion_date.strftime("%Y-%m-%d") for c in completions]
     counts = [1] * len(dates)
@@ -136,7 +134,7 @@ def habit_detail(request, habit_id):
         height=300
     )
 
-    chart_html = mark_safe(fig.to_html(include_plotlyjs=False, full_html=False))
+    completion_history_chart_html = mark_safe(fig.to_html(include_plotlyjs=False, full_html=False))
 
     context = {
         "habit": habit,
@@ -144,7 +142,7 @@ def habit_detail(request, habit_id):
         "today": current,
         "today_date": current_date,
         "latest_completion": latest_completion,
-        "chart_html": chart_html
+        "completion_history_chart_html": completion_history_chart_html
     }
     return render(request, "habits/habit_detail.html", context)
 
@@ -159,18 +157,19 @@ def habit_list(request):
         HttpResponse: The rendered habit list page.
     """
     habits = Habit.objects.all()
+    current_date = datetime.now().date()
     sort_by = request.GET.get("sort_by", "habit_name")
-    occurrence_filter = request.GET.get("filter_by_occurrence", "all")
-    status_filter = request.GET.get("filter_by_status", "active")  # Default to active
+    filter_by_occurrence = request.GET.get("filter_by_occurrence", "all")
+    filter_by_status = request.GET.get("filter_by_status", "active")  # Default to active
 
-    if occurrence_filter in ["daily", "weekly", "monthly"]:
-        habits = habits.filter(habit_occurrence=occurrence_filter)
+    if filter_by_occurrence in ["daily", "weekly", "monthly"]:
+        habits = habits.filter(habit_occurrence=filter_by_occurrence)
 
-    if status_filter in ["active", "paused", "inactive"]:
-        habits = habits.filter(habit_status=status_filter)
+    if filter_by_status in ["active", "paused", "inactive"]:
+        habits = habits.filter(habit_status=filter_by_status)
 
     if sort_by == "streak":
-        habits = sorted(habits, key=lambda h: h.get_current_streak(), reverse=True)
+        habits = habits.order_by("-habit_best_streak")
     else:
         habits = habits.order_by(sort_by)
 
@@ -179,8 +178,9 @@ def habit_list(request):
         "habits": habits,
         "today": current,
         "sort_by": sort_by,
-        "occurrence_filter": occurrence_filter,
-        "status_filter": status_filter
+        "filter_by_occurrence": filter_by_occurrence,
+        "filter_by_status": filter_by_status,
+        "today_date": current_date
     }
     return render(request, "habits/habit_list.html", context)
 

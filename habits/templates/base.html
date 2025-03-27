@@ -1,7 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Streik - Habit Tracker</title>
@@ -16,22 +16,24 @@
     
     <!-- CSS -->
     <link rel="stylesheet" type="text/css" href="{% static 'habits/style.css' %}">
-</head>
-<body>
+
+    <!-- Load Plotly.js  -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  </head>
+
+  <body>
     <header>
-        <h1><i class="fa-solid fa-clipboard-check"></i> Streik | Habit Tracker</h1>
-        <nav>
-            <a href="{% url 'habit_list' %}">Habits</a>
-            <a href="{% url 'analytics' %}">Analytics</a>
-        </nav>
+      <h1><i class="fa-solid fa-clipboard-check"></i> Streik | Habit Tracker</h1>
+      <nav>
+        <a href="{% url 'habit_list' %}">Habits</a>
+        <a href="{% url 'analytics' %}">Analytics</a>
+      </nav>
     </header>
 
     <!-- Menu icon for mobile view -->
     <div class="menu-icon" onclick="toggleMenu()">☰</div>
     <script>
-        /**
-         * Toggles the display of the navigation menu in mobile view.
-         */
+      <!-- Toggles the display of the navigation menu in mobile view -->
         function toggleMenu() {
           const nav = document.querySelector("nav");
           nav.style.display = nav.style.display === "flex" ? "none" : "flex";
@@ -39,12 +41,12 @@
       </script>
     
     <main>
-        <!-- Content block to be overridden by child templates -->
-        {% block content %}{% endblock %}
+      <!-- Content block to be overridden by child templates -->
+      {% block content %}{% endblock %}
     </main>
 
     <footer>
-        <p>&copy; 2025 Streik | Habit Tracker</p>
+      <p>&copy; 2025 Streik | Habit Tracker</p>
     </footer>
-</body>
+  </body>
 </html>

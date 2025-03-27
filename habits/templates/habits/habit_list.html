@@ -1,110 +1,128 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Habits</h2>
+<h1 style="text-align: center; margin-bottom: 30px;">Habits List</h1>
+
+<!-- Add Habit Button -->
 <div style="margin-top: 20px;">
     <a href="{% url 'create_habit' %}">
-        <button style="background-color: #ccc; color: black; padding: 10px 14px; border-radius: 5px; font-size: 14px;">
-            <i class="fa-solid fa-plus"></i>Add Habit
-        </button>
+			<button style="background-color: #ccc; color: black; padding: 10px 14px; border-radius: 5px; font-size: 14px;">
+				<i class="fa-solid fa-plus"></i>Add Habit
+			</button>
     </a>
 </div>
 
-<!-- Sorting & Filtering Form -->
-<form method="GET">
-    <label for="filter_occurrence">Filter by Occurrence:</label>
+<!-- Filter & Sort Form -->
+<form method="GET" class="filter-form">
+  <div class="filters">
+    <label for="filter_occurrence">Occurrence:</label>
     <select name="filter_by_occurrence" id="filter_occurrence">
-        <option value="all" {% if filter_by == "all" %}selected{% endif %}>All</option>
-        <option value="daily" {% if filter_by == "daily" %}selected{% endif %}>Daily</option>
-        <option value="weekly" {% if filter_by == "weekly" %}selected{% endif %}>Weekly</option>
-        <option value="monthly" {% if filter_by == "monthly" %}selected{% endif %}>Monthly</option>
+      <option value="all" {% if filter_by_occurrence == "all" %}selected{% endif %}>All</option>
+      <option value="daily" {% if filter_by_occurrence == "daily" %}selected{% endif %}>Daily</option>
+      <option value="weekly" {% if filter_by_occurrence == "weekly" %}selected{% endif %}>Weekly</option>
+      <option value="monthly" {% if filter_by_occurrence == "monthly" %}selected{% endif %}>Monthly</option>
     </select>
 
-    <!-- Filter by Status -->
-    <label for="filter_status">Filter by Status:</label>
+    <label for="filter_status">Status:</label>
     <select name="filter_by_status" id="filter_status">
-        <option value="all" {% if filter_by_status == "all" %}selected{% endif %}>All</option>
-        <option value="active" {% if filter_by_status == "active" %}selected{% endif %}>Active</option>
-        <option value="paused" {% if filter_by_status == "paused" %}selected{% endif %}>Paused</option>
-        <option value="inactive" {% if filter_by_status == "inactive" %}selected{% endif %}>Inactive</option>
+      <option value="all" {% if filter_by_status == "all" %}selected{% endif %}>All</option>
+      <option value="active" {% if filter_by_status == "active" %}selected{% endif %}>Active</option>
+      <option value="paused" {% if filter_by_status == "paused" %}selected{% endif %}>Paused</option>
+      <option value="inactive" {% if filter_by_status == "inactive" %}selected{% endif %}>Inactive</option>
     </select>
 
-    <label for="sort">Sort by:</label>
+    <label for="sort">Sort:</label>
     <select name="sort_by" id="sort">
-        <option value="habit_name" {% if sort_by == "habit_name" %}selected{% endif %}>Name</option>
-        <option value="streak" {% if sort_by == "streak" %}selected{% endif %}>Streak</option>
-        <option value="habit_occurrence" {% if sort_by == "habit_occurrence" %}selected{% endif %}>Occurrence</option>
+      <option value="habit_name" {% if sort_by == "habit_name" %}selected{% endif %}>Name</option>
+      <option value="streak" {% if sort_by == "habit_best_streak" %}selected{% endif %}>Best Streak</option>
+      <option value="habit_occurrence" {% if sort_by == "habit_occurrence" %}selected{% endif %}>Occurrence</option>
     </select>
 
-    <button type="submit"><i class="fa-solid fa-filter"></i></button>
+    <button type="submit" class="filter-btn">
+      <i class="fa-solid fa-filter"></i> Apply
+    </button>
+  </div>
 </form>
 
-<!-- Habit Table -->
+<!-- Active Filter Summary -->
+<p class="filter-summary">
+  🔎 <strong>Filtered by: </strong> Occurrence = <code>{{ filter_by_occurrence|title }}</code> & Status = <code>{{ filter_by_status|title }}</code> 
+  | <strong>Sorted by: </strong><code>{{ sort_by|title }}</code>
+</p>
+
+<!-- Habits Table -->
 <div class="table-responsive">
-<table>
+  <table>
     <thead>
-        <tr>
-            <th>Done?</th>
-            <th>Name</th>
-            <th><i class="fa-regular fa-calendar-days"></i></th>
-            <th>Status</th>
-            <th>🔥</th>
-            <th>🏆</th>
-            <th>Action</th>
-        </tr>
+      <tr>
+        <th>Done?</th>
+        <th>Name</th>
+        <th><i class="fa-regular fa-calendar-days"></i></th>
+        <th>Status</th>
+        <th>🔥</th>
+        <th>🏆</th>
+        <th>Action</th>
+      </tr>
     </thead>
     <tbody>
-        {% for habit in habits %}
-        <tr>
-            <td data-label="Complete?">
-                <!-- Complete Button (Disabled for Paused & Inactive Habits) -->
-                <form action="{% url 'mark_completed' habit.habit_id %}" method="POST" style="display:inline;">
-                    {% csrf_token %}
-                    
-                    {% with latest_completion=habit.completions.all|dictsortreversed:"completion_date"|first %}
-                        {% if habit.habit_status == "paused" or habit.habit_status == "inactive" %}
-                        <button type="submit" disabled 
-                            style="background-color: white; color: grey; cursor: not-allowed; padding: 8px 12px; border-radius: 5px;"
-                            title="This habit is {{ habit.habit_status }}. Complete option is unavailable.">
-                            <i class="fa-regular fa-circle-xmark"></i>
-                        </button>
-                        {% elif latest_completion and latest_completion.completion_date == today and not latest_completion.completion_deleted %}
-                        <button type="submit" disabled 
-                            style="background-color: white; color: green; cursor: not-allowed; padding: 8px 12px; border-radius: 5px;"
-                            title="This habit was already completed today.">
-                            <i class="fa-regular fa-circle-check"></i>
-                        </button>
-                        {% else %}
-                        <button type="submit" 
-                            style="background-color: white; color: blue; padding: 8px 12px; border-radius: 5px;"
-                            title="Click to mark this habit as completed.">
-                            <i class="fa-regular fa-circle"></i>
-                        </button>
-                        {% endif %}
-                    {% endwith %}
-                </form>
+      {% for habit in habits %}
+      <tr>
 
-            </td>
-            <td data-label="Name"><a href="{% url 'habit_detail' habit.habit_id %}">{{ habit.habit_name }}</a></td>
-            <td data-label="Occurrence">{{ habit.habit_occurrence }}</td>
-            <td data-label="Status">{{ habit.habit_status }}</td>
-            <td data-label="Streak 🔥">{{ habit.habit_last_streak }}</td>
-            <td data-label="Best Streak 🏆">{{ habit.habit_best_streak }}</td>
-            <td data-label="Action 📌">
-                <!-- Edit Button -->
-                <a href="{% url 'edit_habit' habit.habit_id %}"><button><i class="fa-solid fa-pen"></i></button></a>
+				<!-- Complete Button, check if it s already completed today -->
+				<td data-label="Complete?">
+					<form action="{% url 'mark_completed' habit.habit_id %}" method="POST" style="display:inline;">
+						{% csrf_token %}
+						{% with latest_completion=habit.completions.all|dictsortreversed:"completion_date"|first %}
+							{% if habit.habit_status == "paused" or habit.habit_status == "inactive" %}
 
-                <!-- Delete Button -->
-                <a href="{% url 'delete_habit' habit.habit_id %}"><button style="background-color: red;"><i class="fa-solid fa-trash"></i></button></a>
-            </td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="3">No habits found.</td>
-        </tr>
-        {% endfor %}
+							<!-- Grey Button and disabled for Inactive and Paused Habits -->
+							<button type="submit" disabled 
+								style="background-color: white; color: grey; cursor: not-allowed; padding: 8px 12px; border-radius: 5px;"
+								title="This habit is {{ habit.habit_status }}. Complete option is unavailable.">
+								<i class="fa-regular fa-circle-xmark"></i>
+							</button>
+
+							<!-- Green Button and disabled for Completed Habits -->
+							{% elif latest_completion and latest_completion.completion_date.date == today_date and not latest_completion.completion_deleted %}
+							<button type="submit" disabled 
+								style="background-color: white; color: green; cursor: not-allowed; padding: 8px 12px; border-radius: 5px;"
+								title="This habit was already completed today.">
+								<i class="fa-regular fa-circle-check"></i>
+							</button>
+
+							<!-- Blue Button and enable for Habits that can be completed today --> 
+							{% else %}
+							<button type="submit" 
+								style="background-color: white; color: blue; padding: 8px 12px; border-radius: 5px;"
+								title="Click to mark this habit as completed.">
+								<i class="fa-regular fa-circle"></i>
+							</button>
+							{% endif %}
+						{% endwith %}
+					</form>
+				</td>
+
+        <!-- Habit Info -->
+        <td data-label="Name"><a href="{% url 'habit_detail' habit.habit_id %}">{{ habit.habit_name }}</a></td>
+        <td data-label="Occurrence">{{ habit.habit_occurrence }}</td>
+        <td data-label="Status">{{ habit.habit_status }}</td>
+        <td data-label="🔥">{{ habit.habit_last_streak }}</td>
+        <td data-label="🏆">{{ habit.habit_best_streak }}</td>
+
+        <!-- Actions Buttons-->
+        <td data-label="Action">
+
+					<!-- Edit Button -->
+					<a href="{% url 'edit_habit' habit.habit_id %}"><button><i class="fa-solid fa-pen"></i></button></a>
+
+					<!-- Delete Button -->
+					<a href="{% url 'delete_habit' habit.habit_id %}"><button style="background-color: red;"><i class="fa-solid fa-trash"></i></button></a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7">No habits found.</td></tr>
+      {% endfor %}
     </tbody>
-</table>
+  </table>
 </div>
-
 {% endblock %}

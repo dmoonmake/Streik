@@ -1,53 +1,49 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1 style="text-align: center; margin-bottom: 30px;">📊 Analytics Dashboard</h1>
+<h1 style="text-align: center; margin-bottom: 30px;">Analytics Dashboard</h1>
 
 <!-- Summary Cards -->
 <div class="dashboard-cards">
-    <div class="card">
-        <h2>Total Completed</h2>
-        <h2>{{ total_completed }}</h2>
-    </div>
-    <div class="card">
-        <h3>Active Completed</h3>
-        <p>{{ active_completed }}</p>
-    </div>
-    <div class="card">
-        <h3>Previously Inactive</h3>
-        <p>{{ inactive_completed }}</p>
-    </div>
+	<div class="card">
+		<h2>Total Completions</h2>
+		<h2>{{ total_completions }}</h2>
+	</div>
+	<div class="card">
+		<h3>Active</h3>
+		<p>{{ active_completions }}</p>
+	</div>
+	<div class="card">
+		<h3>Other</h3>
+		<p>{{ other_completions }}</p>
+	</div>
 </div>
 
 <!-- Longest Streak -->
 <div class="section">
-    <h2>🏆 Longest Run Streak</h2>
-    {% if longest_streak_habits %}
-        <ul>
-            {% for habit in longest_streak_habits %}
-                <li><strong>{{ habit.habit_name }}</strong> — {{ habit.habit_best_streak }} day(s)</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No streaks yet.</p>
-    {% endif %}
+	<h2>🏆 Longest Run Streak</h2>
+	{% if longest_streak_habits %}
+		{% for habit in longest_streak_habits %}
+			<li><strong>{{ habit.habit_name }}</strong> — {{ habit.habit_best_streak }} day(s)</li>
+		{% endfor %}
+	{% else %}
+		<p>No streaks yet.</p>
+	{% endif %}
 </div>
 
 <!-- Charts -->
 <div class="chart-section">
-    <h2>📈 Completion Trends</h2>
-    <div class="chart-container">{{ completion_trend_chart|safe }}</div>
+	<h2>📈 Habit Completions per Day</h2>
+	<div class="chart-container">{{ completion_trend_chart|safe }}</div>
 
-    <h2>📊 Habit Status Breakdown</h2>
-    <div class="chart-container">{{ status_chart_html|safe }}</div>
+	<h2>📊 Habit Status Breakdown</h2>
+	<div class="chart-container">{{ status_chart_html|safe }}</div>
 
-    <h2>🔥 Streak Trends</h2>
-    <div class="chart-container">{{ streak_chart_html|safe }}</div>
+	<h2>🔥 Top 5 Streak Trends</h2>
+	<div class="chart-container">{{ streak_chart_html|safe }}</div>
 </div>
 
 <!-- Back to Habit List Link -->
 <a href="{% url 'habit_list' %}" class="back-link">← Back to Habit List</a>
 
-<!-- Load Plotly -->
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 {% endblock %}

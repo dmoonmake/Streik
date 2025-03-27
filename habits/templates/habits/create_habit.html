@@ -1,11 +1,15 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h2>Create a New Habit</h2>
+<h1>Create a New Habit</h1>
+
+<!-- Create Form -->
 <form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Create Habit</button>
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Create Habit</button>
 </form>
+
 <!-- Back to Habit List Link -->
-<a href="{% url 'habit_list' %}">Back to Habit List</a>
+<a href="{% url 'habit_list' %}" class="back-link">← Back to Habit List</a>
 {% endblock %}

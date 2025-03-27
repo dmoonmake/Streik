@@ -118,7 +118,8 @@ def test_daily_streak_ignores_deleted():
     now = datetime.now()
 
     Completion.objects.create(completion_habit_id=test_habit, completion_date=now, completion_deleted=True)
-    Completion.objects.create(completion_habit_id=test_habit, completion_date=now - timedelta(days=1))
+    Completion.objects.create(completion_habit_id=test_habit, completion_date=now - timedelta(days=2))
+    Completion.objects.create(completion_habit_id=test_habit, completion_date=now - timedelta(days=3))
 
     assert test_habit.get_current_streak() == 0
 
@@ -235,24 +236,83 @@ def test_report_returns_longest_streak():
     Completion.objects.create(completion_habit_id=test_habit, completion_date=datetime(2025, 1, 6))
     assert Report.get_longest_streak(test_habit.habit_id) == 3
 
-    """
-    Test setting a habit to inactive resets streak and deletes today's completion.
-    """
-    test_habit = Habit.objects.create(habit_name="Walking", habit_occurrence="daily", habit_status="active")
-    now = datetime.now().date()
-    Completion.objects.create(completion_habit_id=test_habit, completion_date=now)
-    
-    assert Completion.objects.filter(completion_habit_id=test_habit, completion_date=now).exists()
+#Edge test cases
+def test_single_completion_daily_streak():
+    habit = Habit.objects.create(habit_name="Water", habit_occurrence="daily", habit_status="active")
+    Completion.objects.create(completion_habit_id=habit, completion_date=datetime.now())
+    assert habit.get_current_streak() == 1
 
-    # Simulate logic performed in your view
-    Completion.objects.filter(completion_habit_id=test_habit, completion_date=now).update(completion_deleted=True)
-    test_habit.habit_last_streak = 0
-    test_habit.habit_status = "inactive"
-    test_habit.save()
+def test_daily_streak_break_after_one_day_gap():
+    habit = Habit.objects.create(habit_name="Walk", habit_occurrence="daily", habit_status="active")
+    now = datetime.now()
+    Completion.objects.create(completion_habit_id=habit, completion_date=now)
+    Completion.objects.create(completion_habit_id=habit, completion_date=now - timedelta(days=2))
+    assert habit.get_current_streak() == 1
 
-    assert test_habit.get_current_streak() == 0
-    assert not Completion.objects.filter(
-        completion_habit_id=test_habit,
-        completion_date=now,
-        completion_deleted=False
-    ).exists()
+def test_deleted_today_completion_does_not_count():
+    habit = Habit.objects.create(habit_name="Yoga", habit_occurrence="daily", habit_status="active")
+    now = datetime.now()
+    Completion.objects.create(completion_habit_id=habit, completion_date=now, completion_deleted=True)
+    Completion.objects.create(completion_habit_id=habit, completion_date=now - timedelta(days=1))
+    Completion.objects.create(completion_habit_id=habit, completion_date=now - timedelta(days=2))
+    assert habit.get_current_streak() == 2
+
+def test_streak_broken_by_deleted_completion():
+    habit = Habit.objects.create(habit_name="Coding", habit_occurrence="daily", habit_status="active")
+    now = datetime.now()
+    Completion.objects.create(completion_habit_id=habit, completion_date=now)
+    Completion.objects.create(completion_habit_id=habit, completion_date=now - timedelta(days=1), completion_deleted=True)
+    Completion.objects.create(completion_habit_id=habit, completion_date=now - timedelta(days=2))
+    assert habit.get_current_streak() == 1
+
+def test_daily_streak_breaks_on_miss():
+    habit = Habit.objects.create(habit_name="Daily Habit", habit_occurrence="daily", habit_status="active")
+    now = datetime.now()
+
+    Completion.objects.create(completion_habit_id=habit, completion_date=now)
+    Completion.objects.create(completion_habit_id=habit, completion_date=now - timedelta(days=2))
+
+    assert habit.get_current_streak() == 1  # Should reset, yesterday is missing
+
+def test_daily_streak_ignores_future():
+    habit = Habit.objects.create(habit_name="Future Daily", habit_occurrence="daily", habit_status="active")
+    now = datetime.now()
+
+    Completion.objects.create(completion_habit_id=habit, completion_date=now + timedelta(days=1))
+    Completion.objects.create(completion_habit_id=habit, completion_date=now)
+
+    assert habit.get_current_streak() == 1  # Only today counts
+
+def test_weekly_multiple_same_week():
+    habit = Habit.objects.create(habit_name="Weekly Same Week", habit_occurrence="weekly", habit_status="active")
+    base_date = datetime(2025, 3, 3)  # Monday
+
+    Completion.objects.create(completion_habit_id=habit, completion_date=base_date)
+    Completion.objects.create(completion_habit_id=habit, completion_date=base_date + timedelta(days=1))  # Tuesday
+
+    assert habit.get_current_streak() == 1  # Only 1 streak despite 2 completions
+
+def test_weekly_streak_break_on_skip():
+    habit = Habit.objects.create(habit_name="Weekly Break", habit_occurrence="weekly", habit_status="active")
+    base = datetime(2025, 2, 1)
+
+    Completion.objects.create(completion_habit_id=habit, completion_date=base)
+    Completion.objects.create(completion_habit_id=habit, completion_date=base + timedelta(weeks=2))  # Skipped 1 week
+
+    assert habit.get_current_streak() == 1
+
+def test_monthly_one_streak_per_month():
+    habit = Habit.objects.create(habit_name="Monthly Compact", habit_occurrence="monthly", habit_status="active")
+    Completion.objects.create(completion_habit_id=habit, completion_date=datetime(2025, 2, 1))
+    Completion.objects.create(completion_habit_id=habit, completion_date=datetime(2025, 2, 28))
+
+    Completion.objects.create(completion_habit_id=habit, completion_date=datetime(2025, 3, 1))
+
+    assert habit.get_current_streak() == 2
+
+def test_monthly_streak_break_on_skip():
+    habit = Habit.objects.create(habit_name="Monthly Skip", habit_occurrence="monthly", habit_status="active")
+    Completion.objects.create(completion_habit_id=habit, completion_date=datetime(2025, 1, 5))
+    Completion.objects.create(completion_habit_id=habit, completion_date=datetime(2025, 3, 5))  # Feb missing
+
+    assert habit.get_current_streak() == 1

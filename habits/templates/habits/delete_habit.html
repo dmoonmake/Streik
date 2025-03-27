@@ -1,11 +1,17 @@
 {% extends "base.html" %}
+
 {% block content %}
 <h2>Delete Habit</h2>
+<h1>{{ habit.habit_name }}</h1>
+
+<!-- Delete Form -->
 <p>Are you sure you want to delete "{{ habit.habit_name }}"?</p>
 <form method="POST">
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit">Yes, Delete</button>
 </form>
-<a href="{% url 'habit_list' %}">Cancel</a>
+
+<!-- Back (Cancel) to Habit List Link -->
+<a href="{% url 'habit_list' %}" class="back-link">Cancel</a>
 {% endblock %}
