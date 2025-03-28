@@ -51,29 +51,6 @@ def habit_fixtures(db):
 
     return created_habits
 
-# @pytest.fixture
-# def test_habit():
-#     """
-#     Create a test habit for editing tests.
-#     """
-#     return Habit.objects.create(
-#         habit_name="Exercise",
-#         habit_occurrence="daily",
-#         habit_status="active",
-#         habit_best_streak=2,
-#         habit_last_streak=2
-#     )
-
-# @pytest.fixture
-# def today_completion(test_habit):
-#     """
-#     Create a valid completion for today.
-#     """
-#     return Completion.objects.create(
-#         completion_habit_id=test_habit,
-#         completion_date=datetime.now()
-#     )
-
 import pytest
 from datetime import datetime, timedelta
 from habits.models import Habit, Completion
