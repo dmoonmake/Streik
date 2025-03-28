@@ -65,12 +65,13 @@ python manage.py runserver
 
 ## 🧪 Testing
 
-### ✅ Unit Tests
+### Unit Tests
 - Located in:
-  - `habits/tests/test_models.py`
-  - `habits/tests/test_views.py`
+  - `habits/tests/unit/test_models.py`
+  - `habits/tests/unit/test_views.py`
+  - `habits/tests/unit/test_forms.py`
 
-### 🧩 BDD Tests (Behaviour-Driven Development)
+### BDD Tests (Behaviour-Driven Development)
 - **Feature files:** `habits/tests/features/`
 - **Step definitions:** `habits/tests/steps/`
 - **Shared fixtures:** `conftest.py`
@@ -82,7 +83,7 @@ pytest
 
 Run a specific test file:
 ```bash
-pytest habits/tests/test_models.py
+pytest habits/tests/unit/test_models.py
 ```
 
 ### 📁 Project Structure
@@ -95,10 +96,12 @@ habits/
 ├── static/
 ├── templates/
 ├── tests/
-│   ├── test_models.py       # Unit tests for models
-│   ├── test_views.py        # Unit tests for views
-│   ├── features/            # .feature files for BDD
-│   └── steps/               # Step definitions for BDD
+|   └── unit
+│     ├── test_models.py       # Unit tests for models
+│     ├── test_views.py        # Unit tests for views
+│     ├── test_forms.py        # Unit tests for forms
+│     ├── features/            # .feature files for BDD
+│     └── steps/               # Step definitions for BDD
 ```
 
 ---
