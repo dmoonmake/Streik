@@ -166,7 +166,8 @@ class Habit(models.Model):
 			for i in range(1, len(unique_weeks)):  # Start from 2nd completion
 				prev_year, prev_week = unique_weeks[i - 1]
 				curr_year, curr_week = unique_weeks[i]
-
+				
+				# Check if week is consecutive
 				is_consecutive = (
 					(curr_year == prev_year and curr_week == prev_week + 1) or
 					(curr_year == prev_year + 1 and prev_week == 52 and curr_week == 1)
@@ -188,6 +189,7 @@ class Habit(models.Model):
 				prev_y, prev_m = unique_months[i - 1]
 				curr_y, curr_m = unique_months[i]
 
+				# Check if month is consecutive
 				is_consecutive = (
 					(curr_y == prev_y and curr_m == prev_m + 1) or
 					(curr_y == prev_y + 1 and prev_m == 12 and curr_m == 1)
@@ -327,15 +329,31 @@ class Report:
 	A utility class that provides methods to generate habit reports.
 
 	Methods:
-		filter_habits_by_occurrence(occurrence) -> QuerySet: Filters habits by occurrence type.
-		generate_completion_chart(completions, habit_name, habit_occurrence) -> str: Generates a dynamic Plotly bar chart.
-		generate_completion_trend_chart() -> str: Generates a Plotly Line Chart for Completion Trends Over Time.
-		generate_status_chart() -> str: Generates a Plotly Pie Chart for Habit Statuses.
-		generate_streak_chart() -> str: Generates a Plotly Bar Chart for Habit Streaks.
-		get_habits_with_longest_streak() -> QuerySet: Finds all habits with the longest streak.
-		get_longest_streak(habit_id) -> int: Calculates the longest consecutive streak for a habit.
-		habits_completed_count() -> tuple: Returns the total number of completions and their
-		distribution based on habit status.
+		filter_habits_by_occurrence(occurrence: str) -> QuerySet:
+			Filters habits by their occurrence type (daily, weekly, monthly).
+
+		generate_completion_chart(completions, habit_name, habit_occurrence) -> str:
+			Generates a dynamic Plotly bar chart for a habit's completion history.
+
+		generate_completion_trend_chart() -> str:
+			Generates a Plotly Line Chart for Completion Trends Over Time.
+
+		generate_status_chart() -> str:
+			Generates a Plotly Pie Chart for Habit Statuses.
+
+		generate_streak_chart() -> str:
+			Generates a Plotly Bar Chart for Habit Streaks.
+
+		get_habits_with_longest_streak() -> QuerySet:
+			Finds all habits that currently have the longest streak.
+
+		get_longest_streak(habit_id: int) -> int:
+			Calculates the longest consecutive streak of completions for a given habit.
+		habits_completed_count() -> tuple:
+			Returns a tuple with:
+			- Total number of completions (non-deleted)
+			- Number of completions linked to active habits
+			- Number of completions linked to paused or inactive habits
 	"""
 		
 	@staticmethod
@@ -430,7 +448,6 @@ class Report:
 		Returns:
 			str: The HTML representation of the chart.
 		"""
-
 		# Count habits by status
 		habits = Habit.objects.all()
 		status_counts = {

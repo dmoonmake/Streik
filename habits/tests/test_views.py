@@ -153,3 +153,25 @@ def test_delete_habit_view_get_confirmation(client, habit_fixtures):
     response = client.get(url)
     assert response.status_code == 200
     assert bytes(test_habit.habit_name, "utf-8") in response.content
+
+def test_edit_habit_occurrence_resets_streak():
+    # Create a daily habit with 3-day streak
+    habit = Habit.objects.create(habit_name="Walk", habit_occurrence="daily", habit_status="active")
+    now = datetime.now()
+
+    Completion.objects.create(completion_habit_id=habit, completion_date=now - timedelta(days=2))
+    Completion.objects.create(completion_habit_id=habit, completion_date=now - timedelta(days=1))
+    Completion.objects.create(completion_habit_id=habit, completion_date=now)
+
+    assert habit.get_current_streak() == 3
+
+    # Simulate user changing occurrence to weekly
+    habit.habit_occurrence = "weekly"
+    habit.save()
+
+    # Recalculate based on new weekly logic
+    streak = habit.get_current_streak()
+
+    # Since completions are close together, it should reset to 1 (same week)
+    assert streak == 1
+    assert habit.habit_last_streak == 1
